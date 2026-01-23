@@ -1,2 +1,2 @@
-# Example
-An example greeter plugin
+# Damage History
+A damage history plugin
