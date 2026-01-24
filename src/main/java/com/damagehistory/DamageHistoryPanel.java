@@ -104,11 +104,11 @@ public class DamageHistoryPanel extends PluginPanel {
             ));
         }
         if (index == 0) {
-            panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
-            panel.setPreferredSize(new Dimension(0, 44));
+            panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+            panel.setPreferredSize(new Dimension(0, 50));
         } else {
-            panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-            panel.setPreferredSize(new Dimension(0, 36));
+            panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+            panel.setPreferredSize(new Dimension(0, 42));
         }
 
         // Fade effect for older entries
@@ -118,10 +118,12 @@ public class DamageHistoryPanel extends PluginPanel {
         itemManager.getImage(record.getWeaponId()).addTo(iconLabel);
         panel.add(iconLabel, BorderLayout.WEST);
 
-        // Create damage label with color coding and larger font
-        JLabel damageLabel = new JLabel(String.valueOf(record.getHit()));
+        // Create damage label with fixed width for alignment
+        JLabel damageLabel = new JLabel(String.valueOf(record.getHit()), SwingConstants.CENTER);
         damageLabel.setForeground(getDamageColor(record.getHit()));
         damageLabel.setFont(FontManager.getRunescapeBoldFont());
+        damageLabel.setPreferredSize(new Dimension(24, damageLabel.getPreferredSize().height));
+        damageLabel.setMinimumSize(new Dimension(24, damageLabel.getPreferredSize().height));
         
         // Calculate ticks since last hit
         String tickInfo = "";
@@ -132,8 +134,9 @@ public class DamageHistoryPanel extends PluginPanel {
             tickColor = getTickDelayColor(ticksSince, hitRecords.get(index + 1).getAttackSpeed());
         }
         
-        JLabel hitLabel = new JLabel(" on " + record.getNpcName());
+        JLabel hitLabel = new JLabel("<html>" + record.getNpcName() + "</html>");
         hitLabel.setForeground(new Color(255, 255, 255, (int)(255 * alpha)));
+        hitLabel.setBorder(new EmptyBorder(0, 8, 0, 0));
 
         JLabel tickLabel = new JLabel(tickInfo);
         tickLabel.setForeground(new Color(tickColor.getRed(), tickColor.getGreen(), tickColor.getBlue(), (int)(255 * alpha)));
