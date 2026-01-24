@@ -31,6 +31,8 @@ public final class UIConstants {
     public static final Color OKAY_TIMING_COLOR = Color.YELLOW;
     public static final Color BAD_TIMING_COLOR = Color.RED;
     
+    public static final Color SPECIAL_ATTACK_OUTLINE_COLOR = new Color(55, 160, 186);
+    
     private UIConstants() {
         // Utility class
     }

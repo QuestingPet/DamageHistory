@@ -6,6 +6,7 @@ import net.runelite.client.ui.FontManager;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 public final class UIUtils {
     
@@ -66,6 +67,38 @@ public final class UIUtils {
     
     public static Color applyAlpha(Color color, float alpha) {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), (int)(255 * alpha));
+    }
+    
+    public static BufferedImage addOutline(BufferedImage image, Color outlineColor) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        BufferedImage outlined = new BufferedImage(width + 2, height + 2, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = outlined.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        // Create mask from original image
+        BufferedImage mask = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D maskG2d = mask.createGraphics();
+        maskG2d.drawImage(image, 0, 0, null);
+        maskG2d.setComposite(AlphaComposite.SrcIn);
+        maskG2d.setColor(outlineColor);
+        maskG2d.fillRect(0, 0, width, height);
+        maskG2d.dispose();
+        
+        // Draw outline by drawing the mask offset in all 8 directions
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                if (x != 0 || y != 0) {
+                    g2d.drawImage(mask, x + 1, y + 1, null);
+                }
+            }
+        }
+        
+        // Draw original image on top
+        g2d.drawImage(image, 1, 1, null);
+        g2d.dispose();
+        
+        return outlined;
     }
     
     private UIUtils() {

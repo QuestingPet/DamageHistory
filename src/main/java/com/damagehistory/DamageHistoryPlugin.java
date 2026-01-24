@@ -100,12 +100,13 @@ public class DamageHistoryPlugin extends Plugin {
         int hit = predictedHit.getHit();
         String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
         int attackSpeed = itemManager.getItemStats(predictedHit.getEquippedWeaponId()).getEquipment().getAspeed();
+        boolean specialAttack = Math.random() < 0.5;
         
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
         
         if (panel != null) {
             SwingUtilities.invokeLater(() -> 
-                panel.addHit(weaponName, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed)
+                panel.addHit(weaponName, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed, specialAttack)
             );
         }
     }

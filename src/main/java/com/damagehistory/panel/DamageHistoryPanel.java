@@ -11,6 +11,7 @@ import javax.inject.Singleton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,8 +52,8 @@ public class DamageHistoryPanel extends PluginPanel {
         layoutPanel.add(hitsContainer);
     }
 
-    public void addHit(String weaponName, int hit, String npcName, int weaponId, int tickCount, int attackSpeed) {
-        HitRecord record = new HitRecord(weaponName, hit, npcName, weaponId, tickCount, attackSpeed);
+    public void addHit(String weaponName, int hit, String npcName, int weaponId, int tickCount, int attackSpeed, boolean specialAttack) {
+        HitRecord record = new HitRecord(weaponName, hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
         hitRecords.add(0, record);
 
         if (hitRecords.size() > UIConstants.MAX_HIT_RECORDS) {
@@ -95,7 +96,13 @@ public class DamageHistoryPanel extends PluginPanel {
         JPanel panel = UIUtils.createHitPanelBase(isRecent);
 
         JLabel iconLabel = new JLabel();
-        itemManager.getImage(record.getWeaponId()).addTo(iconLabel);
+        BufferedImage weaponImage = itemManager.getImage(record.getWeaponId());
+        if (record.isSpecialAttack()) {
+            BufferedImage outlinedImage = UIUtils.addOutline(weaponImage, UIConstants.SPECIAL_ATTACK_OUTLINE_COLOR);
+            iconLabel.setIcon(new ImageIcon(outlinedImage));
+        } else {
+            iconLabel.setIcon(new ImageIcon(weaponImage));
+        }
         UIUtils.addDebugBorder(iconLabel, Color.RED, config.debugMode());
         panel.add(iconLabel, BorderLayout.WEST);
 
