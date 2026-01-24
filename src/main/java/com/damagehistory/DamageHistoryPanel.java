@@ -77,9 +77,9 @@ public class DamageHistoryPanel extends PluginPanel {
     }
 
     private Color getDamageColor(int damage) {
-        if (damage >= 30) return Color.RED;
+        if (damage >= 30) return Color.GREEN;
         if (damage >= 15) return Color.YELLOW;
-        return Color.WHITE;
+        return Color.RED;
     }
 
     private Color getTickDelayColor(int ticksSince, int attackSpeed) {
@@ -103,11 +103,16 @@ public class DamageHistoryPanel extends PluginPanel {
                     BorderFactory.createEmptyBorder(4, 8, 4, 8)
             ));
         }
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        panel.setPreferredSize(new Dimension(0, 36));
+        if (index == 0) {
+            panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 44));
+            panel.setPreferredSize(new Dimension(0, 44));
+        } else {
+            panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+            panel.setPreferredSize(new Dimension(0, 36));
+        }
 
         // Fade effect for older entries
-        float alpha = Math.max(0.3f, 1.0f - (index * 0.02f));
+        float alpha = index == 0 ? 1.0f : 0.9f;
 
         JLabel iconLabel = new JLabel();
         itemManager.getImage(record.getWeaponId()).addTo(iconLabel);
@@ -129,7 +134,7 @@ public class DamageHistoryPanel extends PluginPanel {
         
         JLabel hitLabel = new JLabel(" on " + record.getNpcName());
         hitLabel.setForeground(new Color(255, 255, 255, (int)(255 * alpha)));
-        
+
         JLabel tickLabel = new JLabel(tickInfo);
         tickLabel.setForeground(new Color(tickColor.getRed(), tickColor.getGreen(), tickColor.getBlue(), (int)(255 * alpha)));
 
