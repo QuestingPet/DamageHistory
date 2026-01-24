@@ -4,16 +4,32 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 
-@ConfigGroup("example")
+@ConfigGroup("DamageHistory")
 public interface DamageHistoryConfig extends Config
 {
-	@ConfigItem(
-		keyName = "greeting",
-		name = "Welcome Greeting",
-		description = "The message to show to the user when they login"
-	)
-	default String greeting()
+	enum TickDisplayMode
 	{
-		return "Hello";
+		TOTAL_TICKS,
+		EXTRA_DELAYED_TICKS;
+	}
+
+	@ConfigItem(
+		keyName = "tickDisplayMode",
+		name = "Tick Display",
+		description = "Choose how to display ticks since last attack"
+	)
+	default TickDisplayMode tickDisplayMode()
+	{
+		return TickDisplayMode.TOTAL_TICKS;
+	}
+
+	@ConfigItem(
+		keyName = "debugMode",
+		name = "Debug Mode",
+		description = "Show border colors for debugging layout"
+	)
+	default boolean debugMode()
+	{
+		return false;
 	}
 }

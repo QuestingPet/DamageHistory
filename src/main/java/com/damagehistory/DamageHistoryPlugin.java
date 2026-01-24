@@ -19,6 +19,7 @@ import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PluginMessage;
+import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.NPCManager;
 import net.runelite.client.plugins.Plugin;
@@ -83,9 +84,7 @@ public class DamageHistoryPlugin extends Plugin {
 
     @Subscribe
     public void onGameStateChanged(GameStateChanged gameStateChanged) {
-        if (gameStateChanged.getGameState() == GameState.LOGGED_IN) {
-            client.addChatMessage(ChatMessageType.GAMEMESSAGE, "", "Example says " + config.greeting(), null);
-        }
+
     }
 
     @Subscribe
@@ -117,6 +116,13 @@ public class DamageHistoryPlugin extends Plugin {
             if (panel != null) {
                 SwingUtilities.invokeLater(() -> panel.addHit(weaponName, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed));
             }
+        }
+    }
+
+    @Subscribe
+    public void onConfigChanged(ConfigChanged configChanged) {
+        if ("DamageHistory".equals(configChanged.getGroup()) && panel != null) {
+            SwingUtilities.invokeLater(() -> panel.refreshPanel());
         }
     }
 
