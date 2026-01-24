@@ -106,7 +106,7 @@ public class DamageHistoryPlugin extends Plugin {
         
         if (panel != null) {
             SwingUtilities.invokeLater(() -> 
-                panel.addHit(weaponName, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed, specialAttack)
+                panel.addHit(hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed, specialAttack)
             );
         }
     }

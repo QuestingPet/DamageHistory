@@ -1,19 +1,20 @@
 package com.damagehistory.panel;
 
 import com.damagehistory.DamageHistoryConfig;
-import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.PluginPanel;
-import net.runelite.client.ui.FontManager;
-import net.runelite.client.game.ItemManager;
-
-import javax.inject.Inject;
-import javax.inject.Singleton;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import javax.inject.Inject;
+import javax.inject.Singleton;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import net.runelite.api.gameval.ItemID;
+import net.runelite.client.game.ItemManager;
+import net.runelite.client.ui.ColorScheme;
+import net.runelite.client.ui.FontManager;
+import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.util.AsyncBufferedImage;
 
 @Singleton
 public class DamageHistoryPanel extends PluginPanel {
@@ -40,6 +41,9 @@ public class DamageHistoryPanel extends PluginPanel {
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> refreshPanel());
         buttonPanel.add(refreshButton);
+        JButton testButton = new JButton("+");
+        testButton.addActionListener(e -> addTestRecord());
+        buttonPanel.add(testButton);
         JButton clearButton = new JButton("Clear History");
         clearButton.addActionListener(e -> clearHistory());
         buttonPanel.add(clearButton);
@@ -52,8 +56,8 @@ public class DamageHistoryPanel extends PluginPanel {
         layoutPanel.add(hitsContainer);
     }
 
-    public void addHit(String weaponName, int hit, String npcName, int weaponId, int tickCount, int attackSpeed, boolean specialAttack) {
-        HitRecord record = new HitRecord(weaponName, hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
+    public void addHit(int hit, String npcName, int weaponId, int tickCount, int attackSpeed, boolean specialAttack) {
+        HitRecord record = new HitRecord(hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
         hitRecords.add(0, record);
 
         if (hitRecords.size() > UIConstants.MAX_HIT_RECORDS) {
@@ -88,6 +92,19 @@ public class DamageHistoryPanel extends PluginPanel {
         hitRecords.clear();
         refreshPanel();
     }
+    
+    private void addTestRecord() {
+        String[] npcs = {"Goblin", "Cow", "Rat", "Spider"};
+
+        int hit = (int)(Math.random() * 50);
+        String npc = npcs[(int)(Math.random() * npcs.length)];
+        int weaponId = 4151; // Whip ID
+        int tickCount = (int)(Math.random() * 1000);
+        int attackSpeed = 4;
+        boolean specialAttack = Math.random() < 0.3;
+        
+        addHit(hit, npc, weaponId, tickCount, attackSpeed, specialAttack);
+    }
 
     private JPanel createHitPanel(HitRecord record, int index, LayoutCalculator.ColumnWidths widths) {
         boolean isRecent = index == 0;
@@ -96,13 +113,15 @@ public class DamageHistoryPanel extends PluginPanel {
         JPanel panel = UIUtils.createHitPanelBase(isRecent);
 
         JLabel iconLabel = new JLabel();
-        BufferedImage weaponImage = itemManager.getImage(record.getWeaponId());
-        if (record.isSpecialAttack()) {
-            BufferedImage outlinedImage = UIUtils.addOutline(weaponImage, UIConstants.SPECIAL_ATTACK_OUTLINE_COLOR);
-            iconLabel.setIcon(new ImageIcon(outlinedImage));
-        } else {
-            iconLabel.setIcon(new ImageIcon(weaponImage));
-        }
+        AsyncBufferedImage weaponImage = itemManager.getImage(record.getWeaponId());
+        weaponImage.onLoaded(() -> {
+            if (record.isSpecialAttack()) {
+                BufferedImage outlinedImage = UIUtils.addOutline(weaponImage, UIConstants.SPECIAL_ATTACK_OUTLINE_COLOR);
+                iconLabel.setIcon(new ImageIcon(outlinedImage));
+            } else {
+                iconLabel.setIcon(new ImageIcon(weaponImage));
+            }
+        });
         UIUtils.addDebugBorder(iconLabel, Color.RED, config.debugMode());
         panel.add(iconLabel, BorderLayout.WEST);
 

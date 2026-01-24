@@ -4,8 +4,6 @@ import lombok.Value;
 
 @Value
 public class HitRecord {
-
-    String weaponName;
     int hit;
     String npcName;
     int weaponId;
