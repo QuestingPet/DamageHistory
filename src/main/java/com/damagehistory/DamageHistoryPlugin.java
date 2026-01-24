@@ -1,27 +1,18 @@
 package com.damagehistory;
 
+import com.damagehistory.panel.DamageHistoryPanel;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import javax.inject.Inject;
 
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import net.runelite.api.ChatMessageType;
 import net.runelite.api.Client;
-import net.runelite.api.GameState;
-import net.runelite.api.Hitsplat;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.GameTick;
-import net.runelite.api.events.HitsplatApplied;
-import net.runelite.api.gameval.ItemID;
-import net.runelite.api.gameval.NpcID;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PluginMessage;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
-import net.runelite.client.game.NPCManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -30,7 +21,6 @@ import net.runelite.client.util.ImageUtil;
 
 import javax.swing.SwingUtilities;
 import java.awt.image.BufferedImage;
-
 import java.util.Map;
 
 @Slf4j
@@ -39,6 +29,10 @@ import java.util.Map;
 )
 public class DamageHistoryPlugin extends Plugin {
 
+    private static final String PLUGIN_NAMESPACE = "customizable-xp-drops";
+    private static final String PREDICTED_HIT_MESSAGE = "predicted-hit";
+    private static final String CONFIG_GROUP = "DamageHistory";
+    
     @Inject
     private Client client;
 
@@ -83,45 +77,42 @@ public class DamageHistoryPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameStateChanged(GameStateChanged gameStateChanged) {
-
-    }
-
-    @Subscribe
-    public void onGameTick(GameTick gameTick) {
-        //		log.debug("test");
-    }
-
-    @Subscribe
-    public void onHitsplatApplied(HitsplatApplied event) {
-        log.debug(event.toString());
-    }
-
-    @Subscribe
     public void onPluginMessage(PluginMessage pluginMessage) {
-        log.debug(pluginMessage.toString());
-        if ("customizable-xp-drops".equals(pluginMessage.getNamespace()) &&
-            "predicted-hit".equals(pluginMessage.getName())) {
+        if (!PLUGIN_NAMESPACE.equals(pluginMessage.getNamespace()) ||
+            !PREDICTED_HIT_MESSAGE.equals(pluginMessage.getName())) {
+            return;
+        }
 
-            Map<String, Object> data = pluginMessage.getData();
-            Object json = data.get("value");
-            log.debug(json.toString());
-            PredictedHit predictedHit = gson.fromJson(json.toString(), PredictedHit.class);
-            String weaponName = itemManager.getItemComposition(predictedHit.getEquippedWeaponId()).getMembersName();
-            int hit = predictedHit.getHit();
-            String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
-            int attackSpeed = itemManager.getItemStats(predictedHit.getEquippedWeaponId()).getEquipment().getAspeed();
-            log.debug("{} hit {} on {}", weaponName, hit, npcName);
-            
-            if (panel != null) {
-                SwingUtilities.invokeLater(() -> panel.addHit(weaponName, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed));
-            }
+        try {
+            processPredictedHit(pluginMessage);
+        } catch (Exception e) {
+            log.error("Error processing predicted hit", e);
+        }
+    }
+    
+    private void processPredictedHit(PluginMessage pluginMessage) {
+        Map<String, Object> data = pluginMessage.getData();
+        Object json = data.get("value");
+        log.debug(json.toString());
+        
+        PredictedHit predictedHit = gson.fromJson(json.toString(), PredictedHit.class);
+        String weaponName = itemManager.getItemComposition(predictedHit.getEquippedWeaponId()).getMembersName();
+        int hit = predictedHit.getHit();
+        String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
+        int attackSpeed = itemManager.getItemStats(predictedHit.getEquippedWeaponId()).getEquipment().getAspeed();
+        
+        log.debug("{} hit {} on {}", weaponName, hit, npcName);
+        
+        if (panel != null) {
+            SwingUtilities.invokeLater(() -> 
+                panel.addHit(weaponName, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed)
+            );
         }
     }
 
     @Subscribe
     public void onConfigChanged(ConfigChanged configChanged) {
-        if ("DamageHistory".equals(configChanged.getGroup()) && panel != null) {
+        if (CONFIG_GROUP.equals(configChanged.getGroup()) && panel != null) {
             SwingUtilities.invokeLater(() -> panel.refreshPanel());
         }
     }

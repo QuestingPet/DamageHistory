@@ -1,4 +1,4 @@
-package com.damagehistory;
+package com.damagehistory.panel;
 
 public class HitRecord {
     private final String weaponName;
