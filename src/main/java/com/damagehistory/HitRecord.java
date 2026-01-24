@@ -5,12 +5,16 @@ public class HitRecord {
     private final int hit;
     private final String npcName;
     private final int weaponId;
+    private final int tickCount;
+    private final int attackSpeed;
 
-    public HitRecord(String weaponName, int hit, String npcName, int weaponId) {
+    public HitRecord(String weaponName, int hit, String npcName, int weaponId, int tickCount, int attackSpeed) {
         this.weaponName = weaponName;
         this.hit = hit;
         this.npcName = npcName;
         this.weaponId = weaponId;
+        this.tickCount = tickCount;
+        this.attackSpeed = attackSpeed;
     }
 
     public String getWeaponName() {
@@ -27,5 +31,13 @@ public class HitRecord {
 
     public int getWeaponId() {
         return weaponId;
+    }
+
+    public int getTickCount() {
+        return tickCount;
+    }
+
+    public int getAttackSpeed() {
+        return attackSpeed;
     }
 }

@@ -2,6 +2,7 @@ package com.damagehistory;
 
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.ui.FontManager;
 import net.runelite.client.game.ItemManager;
 
 import javax.inject.Inject;
@@ -30,14 +31,23 @@ public class DamageHistoryPanel extends PluginPanel {
         layoutPanel.setLayout(new BoxLayout(layoutPanel, BoxLayout.Y_AXIS));
         add(layoutPanel, BorderLayout.NORTH);
 
+        // Add clear button panel
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        JButton clearButton = new JButton("Clear History");
+        clearButton.addActionListener(e -> clearHistory());
+        buttonPanel.add(clearButton);
+        buttonPanel.setBorder(new EmptyBorder(0, 0, 8, 0));
+        layoutPanel.add(buttonPanel);
+
         hitsContainer.setLayout(new BoxLayout(hitsContainer, BoxLayout.Y_AXIS));
         hitsContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
         layoutPanel.add(hitsContainer);
     }
 
-    public void addHit(String weaponName, int hit, String npcName, int weaponId) {
-        HitRecord record = new HitRecord(weaponName, hit, npcName, weaponId);
+    public void addHit(String weaponName, int hit, String npcName, int weaponId, int tickCount, int attackSpeed) {
+        HitRecord record = new HitRecord(weaponName, hit, npcName, weaponId, tickCount, attackSpeed);
         hitRecords.add(0, record); // Add to beginning for most recent first
 
         // Keep only last 50 hits
@@ -51,8 +61,9 @@ public class DamageHistoryPanel extends PluginPanel {
     private void refreshPanel() {
         hitsContainer.removeAll();
 
-        for (HitRecord record : hitRecords) {
-            JPanel hitPanel = createHitPanel(record);
+        for (int i = 0; i < hitRecords.size(); i++) {
+            HitRecord record = hitRecords.get(i);
+            JPanel hitPanel = createHitPanel(record, i);
             hitsContainer.add(hitPanel);
         }
 
@@ -60,26 +71,76 @@ public class DamageHistoryPanel extends PluginPanel {
         hitsContainer.repaint();
     }
 
-    private JPanel createHitPanel(HitRecord record) {
+    private void clearHistory() {
+        hitRecords.clear();
+        refreshPanel();
+    }
+
+    private Color getDamageColor(int damage) {
+        if (damage >= 30) return Color.RED;
+        if (damage >= 15) return Color.YELLOW;
+        return Color.WHITE;
+    }
+
+    private Color getTickDelayColor(int ticksSince, int attackSpeed) {
+        if (ticksSince <= attackSpeed) return Color.GREEN;
+        if (ticksSince <= attackSpeed + 2) return Color.YELLOW;
+        return Color.RED;
+    }
+
+    private JPanel createHitPanel(HitRecord record, int index) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, ColorScheme.DARK_GRAY_COLOR),
-                BorderFactory.createEmptyBorder(4, 8, 4, 8)
-        ));
+        // Highlight most recent hit
+        if (index == 0) {
+            panel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 1, 0, ColorScheme.BRAND_ORANGE),
+                    BorderFactory.createEmptyBorder(4, 8, 4, 8)
+            ));
+        } else {
+            panel.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createMatteBorder(0, 0, 1, 0, ColorScheme.DARK_GRAY_COLOR),
+                    BorderFactory.createEmptyBorder(4, 8, 4, 8)
+            ));
+        }
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
         panel.setPreferredSize(new Dimension(0, 36));
+
+        // Fade effect for older entries
+        float alpha = Math.max(0.3f, 1.0f - (index * 0.02f));
 
         JLabel iconLabel = new JLabel();
         itemManager.getImage(record.getWeaponId()).addTo(iconLabel);
         panel.add(iconLabel, BorderLayout.WEST);
 
-        JLabel hitLabel = new JLabel(String.format("Hit %d on %s",
-                record.getHit(), record.getNpcName()));
-        hitLabel.setForeground(Color.WHITE);
-        hitLabel.setBorder(new EmptyBorder(0, 8, 0, 0));
+        // Create damage label with color coding and larger font
+        JLabel damageLabel = new JLabel(String.valueOf(record.getHit()));
+        damageLabel.setForeground(getDamageColor(record.getHit()));
+        damageLabel.setFont(FontManager.getRunescapeBoldFont());
+        
+        // Calculate ticks since last hit
+        String tickInfo = "";
+        Color tickColor = Color.WHITE;
+        if (index < hitRecords.size() - 1) {
+            int ticksSince = record.getTickCount() - hitRecords.get(index + 1).getTickCount();
+            tickInfo = String.format(" (+%dt)", ticksSince);
+            tickColor = getTickDelayColor(ticksSince, hitRecords.get(index + 1).getAttackSpeed());
+        }
+        
+        JLabel hitLabel = new JLabel(" on " + record.getNpcName());
+        hitLabel.setForeground(new Color(255, 255, 255, (int)(255 * alpha)));
+        
+        JLabel tickLabel = new JLabel(tickInfo);
+        tickLabel.setForeground(new Color(tickColor.getRed(), tickColor.getGreen(), tickColor.getBlue(), (int)(255 * alpha)));
 
-        panel.add(hitLabel, BorderLayout.CENTER);
+        JPanel textPanel = new JPanel(new BorderLayout());
+        textPanel.setBackground(panel.getBackground());
+        textPanel.add(damageLabel, BorderLayout.WEST);
+        textPanel.add(hitLabel, BorderLayout.CENTER);
+        textPanel.add(tickLabel, BorderLayout.EAST);
+        textPanel.setBorder(new EmptyBorder(0, 8, 0, 0));
+        
+        panel.add(textPanel, BorderLayout.CENTER);
         return panel;
     }
 }
