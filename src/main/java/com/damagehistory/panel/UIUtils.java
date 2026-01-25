@@ -36,8 +36,10 @@ public final class UIUtils {
     public static JPanel createHitPanelBase(boolean isRecent) {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, UIConstants.PANEL_HEIGHT));
-        panel.setPreferredSize(new Dimension(0, UIConstants.PANEL_HEIGHT));
+        
+        int panelHeight = isRecent ? UIConstants.PANEL_HEIGHT + 16 : UIConstants.PANEL_HEIGHT;
+        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, panelHeight));
+        panel.setPreferredSize(new Dimension(0, panelHeight));
         
         Color borderColor = isRecent ? ColorScheme.BRAND_ORANGE : ColorScheme.DARK_GRAY_COLOR;
         panel.setBorder(BorderFactory.createCompoundBorder(

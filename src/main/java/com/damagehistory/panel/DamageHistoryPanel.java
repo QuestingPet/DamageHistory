@@ -74,6 +74,22 @@ public class DamageHistoryPanel extends PluginPanel {
         hitsContainer.removeAll();
 
         if (hitRecords.isEmpty()) {
+            JLabel emptyLabel = new JLabel("<html><div style='text-align: center;'>" +
+                "The <span style='color: #00FF00;'>Customizable XP Drops</span> plugin is required for populating data.<br><br>" +
+                "If you're not seeing any data here after hitting monsters, " +
+                "please go install it from the Plugin Hub.<br><br>" +
+                "If you don't want the customized xp drops, but still want this plugin's functionality, " +
+                "you can uncheck <span style='color: #FF0000;'>\"Use Customizable XP drops\"</span>" +
+                "</div></html>");
+            emptyLabel.setForeground(Color.WHITE);
+            emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            emptyLabel.setBorder(new EmptyBorder(20, 10, 20, 10));
+            
+            JPanel emptyPanel = new JPanel(new BorderLayout());
+            emptyPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+            emptyPanel.add(emptyLabel, BorderLayout.CENTER);
+            
+            hitsContainer.add(emptyPanel);
             hitsContainer.revalidate();
             hitsContainer.repaint();
             return;
@@ -114,6 +130,15 @@ public class DamageHistoryPanel extends PluginPanel {
         float alpha = isRecent ? UIConstants.RECENT_HIT_ALPHA : UIConstants.OLD_HIT_ALPHA;
         
         JPanel panel = UIUtils.createHitPanelBase(isRecent);
+        
+        // Add LATEST indicator for the most recent hit
+        if (isRecent) {
+            JLabel latestLabel = new JLabel("LATEST");
+            latestLabel.setFont(FontManager.getRunescapeSmallFont());
+            latestLabel.setForeground(ColorScheme.BRAND_ORANGE);
+            latestLabel.setBorder(new EmptyBorder(0, 0, 2, 4));
+            panel.add(latestLabel, BorderLayout.NORTH);
+        }
 
         JLabel iconLabel = new JLabel();
         iconLabel.setPreferredSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
