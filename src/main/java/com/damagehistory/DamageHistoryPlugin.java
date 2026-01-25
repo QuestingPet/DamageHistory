@@ -97,11 +97,18 @@ public class DamageHistoryPlugin extends Plugin {
         log.debug(json.toString());
         
         PredictedHit predictedHit = gson.fromJson(json.toString(), PredictedHit.class);
+
+        // Skip PvP hits and invalid NPCs
+        if (predictedHit.isOpponentIsPlayer() || predictedHit.getNpcId() == -1) {
+            return;
+        }
+        
         String weaponName = itemManager.getItemComposition(predictedHit.getEquippedWeaponId()).getMembersName();
         int hit = predictedHit.getHit();
         String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
         var itemStats = itemManager.getItemStats(predictedHit.getEquippedWeaponId());
         int attackSpeed = itemStats != null ? itemStats.getEquipment().getAspeed() : DEFAULT_ATTACK_SPEED;
+        log.debug(itemStats.toString());
         boolean specialAttack = Math.random() < 0.5;
         
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
