@@ -33,6 +33,9 @@ public final class UIConstants {
     
     public static final Color SPECIAL_ATTACK_OUTLINE_COLOR = new Color(55, 160, 186);
     
+    // Icon dimensions
+    public static final int ICON_SIZE = 36;
+    
     private UIConstants() {
         // Utility class
     }

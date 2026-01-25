@@ -14,10 +14,13 @@ import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.AsyncBufferedImage;
 
 @Singleton
 public class DamageHistoryPanel extends PluginPanel {
+    private static final BufferedImage FIST_IMAGE = ImageUtil.loadImageResource(DamageHistoryPanel.class, "fist.png");
+    
     @Inject
     private ItemManager itemManager;
 
@@ -113,15 +116,16 @@ public class DamageHistoryPanel extends PluginPanel {
         JPanel panel = UIUtils.createHitPanelBase(isRecent);
 
         JLabel iconLabel = new JLabel();
-        AsyncBufferedImage weaponImage = itemManager.getImage(record.getWeaponId());
-        weaponImage.onLoaded(() -> {
-            if (record.isSpecialAttack()) {
-                BufferedImage outlinedImage = UIUtils.addOutline(weaponImage, UIConstants.SPECIAL_ATTACK_OUTLINE_COLOR);
-                iconLabel.setIcon(new ImageIcon(outlinedImage));
-            } else {
-                iconLabel.setIcon(new ImageIcon(weaponImage));
-            }
-        });
+        iconLabel.setPreferredSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
+        iconLabel.setMinimumSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
+        iconLabel.setMaximumSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
+        
+        if (record.getWeaponId() == -1) {
+            setIconWithOutline(iconLabel, FIST_IMAGE, record.isSpecialAttack());
+        } else {
+            AsyncBufferedImage weaponImage = itemManager.getImage(record.getWeaponId());
+            weaponImage.onLoaded(() -> setIconWithOutline(iconLabel, weaponImage, record.isSpecialAttack()));
+        }
         UIUtils.addDebugBorder(iconLabel, Color.RED, config.debugMode());
         panel.add(iconLabel, BorderLayout.WEST);
 
@@ -185,5 +189,14 @@ public class DamageHistoryPanel extends PluginPanel {
         
         Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed);
         return new TickInfo(tickText, tickColor);
+    }
+    
+    private void setIconWithOutline(JLabel iconLabel, BufferedImage image, boolean specialAttack) {
+        if (specialAttack) {
+            BufferedImage outlinedImage = UIUtils.addOutline(image, UIConstants.SPECIAL_ATTACK_OUTLINE_COLOR);
+            iconLabel.setIcon(new ImageIcon(outlinedImage));
+        } else {
+            iconLabel.setIcon(new ImageIcon(image));
+        }
     }
 }

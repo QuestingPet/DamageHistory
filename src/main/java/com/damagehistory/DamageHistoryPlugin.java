@@ -32,6 +32,7 @@ public class DamageHistoryPlugin extends Plugin {
     private static final String PLUGIN_NAMESPACE = "customizable-xp-drops";
     private static final String PREDICTED_HIT_MESSAGE = "predicted-hit";
     private static final String CONFIG_GROUP = "DamageHistory";
+    private static final int DEFAULT_ATTACK_SPEED = 4;
     
     @Inject
     private Client client;
@@ -99,7 +100,8 @@ public class DamageHistoryPlugin extends Plugin {
         String weaponName = itemManager.getItemComposition(predictedHit.getEquippedWeaponId()).getMembersName();
         int hit = predictedHit.getHit();
         String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
-        int attackSpeed = itemManager.getItemStats(predictedHit.getEquippedWeaponId()).getEquipment().getAspeed();
+        var itemStats = itemManager.getItemStats(predictedHit.getEquippedWeaponId());
+        int attackSpeed = itemStats != null ? itemStats.getEquipment().getAspeed() : DEFAULT_ATTACK_SPEED;
         boolean specialAttack = Math.random() < 0.5;
         
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
