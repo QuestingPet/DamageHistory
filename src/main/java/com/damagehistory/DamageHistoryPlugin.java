@@ -56,6 +56,7 @@ public class DamageHistoryPlugin extends Plugin {
     private DamageHistoryPanel panel;
     private NavigationButton navButton;
     private final BufferedImage icon = ImageUtil.loadImageResource(DamageHistoryPlugin.class, "panel-icon.png");
+    private int playerCounter = 0;
 
     @Override
     protected void startUp() throws Exception {
@@ -68,6 +69,10 @@ public class DamageHistoryPlugin extends Plugin {
                 .build();
         
         clientToolbar.addNavigation(navButton);
+        
+        // Initialize test data after panel is fully constructed
+        SwingUtilities.invokeLater(() -> panel.addTestPlayers());
+        
         log.debug("Damage History started!");
     }
 
@@ -114,9 +119,13 @@ public class DamageHistoryPlugin extends Plugin {
 
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
         
+        String[] players = {"You", "Player1", "Player2"};
+        String player = players[playerCounter % players.length];
+        playerCounter++;
+        
         if (panel != null) {
             SwingUtilities.invokeLater(() -> 
-                panel.addHit(hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed, specialAttack)
+                panel.addHitForPlayer(player, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed, specialAttack)
             );
         }
     }

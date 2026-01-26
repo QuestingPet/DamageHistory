@@ -2,33 +2,27 @@ package com.damagehistory.panel;
 
 import com.damagehistory.DamageHistoryConfig;
 import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import net.runelite.api.gameval.ItemID;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
-import net.runelite.client.ui.FontManager;
 import net.runelite.client.ui.PluginPanel;
-import net.runelite.client.util.ImageUtil;
-import net.runelite.client.util.AsyncBufferedImage;
 
 @Singleton
 public class DamageHistoryPanel extends PluginPanel {
-    private static final BufferedImage FIST_IMAGE = ImageUtil.loadImageResource(DamageHistoryPanel.class, "fist.png");
-    
     @Inject
     private ItemManager itemManager;
 
     @Inject
     private DamageHistoryConfig config;
 
-    private final JPanel hitsContainer = new JPanel();
-    private final List<HitRecord> hitRecords = new ArrayList<>();
+    private final JPanel playersContainer = new JPanel();
+    private final Map<String, PlayerPanel> playerPanels = new HashMap<>();
+    private int testRecordCounter = 0;
 
     public DamageHistoryPanel() {
         setBorder(new EmptyBorder(6, 6, 6, 6));
@@ -53,68 +47,63 @@ public class DamageHistoryPanel extends PluginPanel {
         buttonPanel.setBorder(new EmptyBorder(0, 0, 8, 0));
         layoutPanel.add(buttonPanel);
 
-        hitsContainer.setLayout(new BoxLayout(hitsContainer, BoxLayout.Y_AXIS));
-        hitsContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        playersContainer.setLayout(new BoxLayout(playersContainer, BoxLayout.Y_AXIS));
+        playersContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
 
-        layoutPanel.add(hitsContainer);
+        JScrollPane scrollPane = new JScrollPane(playersContainer);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        
+        layoutPanel.add(scrollPane);
     }
 
     public void addHit(int hit, String npcName, int weaponId, int tickCount, int attackSpeed, boolean specialAttack) {
-        HitRecord record = new HitRecord(hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
-        hitRecords.add(0, record);
-
-        if (hitRecords.size() > UIConstants.MAX_HIT_RECORDS) {
-            hitRecords.remove(hitRecords.size() - 1);
+        addHitForPlayer("You", hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
+    }
+    
+    public void addHitForPlayer(String playerName, int hit, String npcName, int weaponId, int tickCount, int attackSpeed, boolean specialAttack) {
+        PlayerPanel playerPanel = playerPanels.get(playerName);
+        if (playerPanel == null) {
+            playerPanel = new PlayerPanel(playerName, itemManager, config);
+            playerPanels.put(playerName, playerPanel);
+            playersContainer.add(playerPanel);
+            playersContainer.revalidate();
         }
-
-        refreshPanel();
+        
+        PlayerHitRecord record = new PlayerHitRecord(playerName, hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
+        playerPanel.addHit(record);
     }
 
     public void refreshPanel() {
-        hitsContainer.removeAll();
-
-        if (hitRecords.isEmpty()) {
-            JLabel emptyLabel = new JLabel("<html><div style='text-align: center;'>" +
-                "The <span style='color: #00FF00;'>Customizable XP Drops</span> plugin is required for populating data.<br><br>" +
-                "If you're not seeing any data here after hitting monsters, " +
-                "please go install it from the Plugin Hub.<br><br>" +
-                "If you don't want the customized xp drops, but still want this plugin's functionality, " +
-                "you can uncheck <span style='color: #FF0000;'>\"Use Customizable XP drops\"</span>" +
-                "</div></html>");
-            emptyLabel.setForeground(Color.WHITE);
-            emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            emptyLabel.setBorder(new EmptyBorder(20, 10, 20, 10));
-            
-            JPanel emptyPanel = new JPanel(new BorderLayout());
-            emptyPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-            emptyPanel.add(emptyLabel, BorderLayout.CENTER);
-            
-            hitsContainer.add(emptyPanel);
-            hitsContainer.revalidate();
-            hitsContainer.repaint();
-            return;
+        for (PlayerPanel playerPanel : playerPanels.values()) {
+            playerPanel.refreshPanel();
         }
-
-        LayoutCalculator.ColumnWidths widths = LayoutCalculator.calculateColumnWidths(hitRecords, this);
-
-        for (int i = 0; i < hitRecords.size(); i++) {
-            HitRecord record = hitRecords.get(i);
-            JPanel hitPanel = createHitPanel(record, i, widths);
-            hitsContainer.add(hitPanel);
-        }
-
-        hitsContainer.revalidate();
-        hitsContainer.repaint();
+        playersContainer.revalidate();
+        playersContainer.repaint();
     }
 
     private void clearHistory() {
-        hitRecords.clear();
-        refreshPanel();
+        for (PlayerPanel panel : playerPanels.values()) {
+            playersContainer.remove(panel);
+        }
+        playerPanels.clear();
+        playersContainer.removeAll();
+        testRecordCounter = 0;
+        addTestPlayers();
+        playersContainer.revalidate();
+        playersContainer.repaint();
     }
     
     private void addTestRecord() {
-        String[] npcs = {"Goblin", "Cow", "Rat", "Spider"};
+        String[] players = {"You", "Player1", "Player2", "Player3"};
+        String[] npcs = {"Goblin", "Cow", "Rat", "Spider", "Something that is very long"};
 
+        // Cycle through players in order
+        String player = players[testRecordCounter % players.length];
+        testRecordCounter++;
+        
         int hit = (int)(Math.random() * 50);
         String npc = npcs[(int)(Math.random() * npcs.length)];
         int weaponId = 4151; // Whip ID
@@ -122,106 +111,23 @@ public class DamageHistoryPanel extends PluginPanel {
         int attackSpeed = 4;
         boolean specialAttack = Math.random() < 0.3;
         
-        addHit(hit, npc, weaponId, tickCount, attackSpeed, specialAttack);
-    }
-
-    private JPanel createHitPanel(HitRecord record, int index, LayoutCalculator.ColumnWidths widths) {
-        boolean isRecent = index == 0;
-        float alpha = isRecent ? UIConstants.RECENT_HIT_ALPHA : UIConstants.OLD_HIT_ALPHA;
-        
-        JPanel panel = UIUtils.createHitPanelBase(isRecent);
-        
-        // Add LATEST indicator for the most recent hit
-        if (isRecent) {
-            JLabel latestLabel = new JLabel("LATEST");
-            latestLabel.setFont(FontManager.getRunescapeSmallFont());
-            latestLabel.setForeground(ColorScheme.BRAND_ORANGE);
-            latestLabel.setBorder(new EmptyBorder(0, 0, 2, 4));
-            panel.add(latestLabel, BorderLayout.NORTH);
-        }
-
-        JLabel iconLabel = new JLabel();
-        iconLabel.setPreferredSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
-        iconLabel.setMinimumSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
-        iconLabel.setMaximumSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
-        
-        if (record.getWeaponId() == -1) {
-            setIconWithOutline(iconLabel, FIST_IMAGE, record.isSpecialAttack());
-        } else {
-            AsyncBufferedImage weaponImage = itemManager.getImage(record.getWeaponId());
-            weaponImage.onLoaded(() -> setIconWithOutline(iconLabel, weaponImage, record.isSpecialAttack()));
-        }
-        UIUtils.addDebugBorder(iconLabel, Color.RED, config.debugMode());
-        panel.add(iconLabel, BorderLayout.WEST);
-
-        Dimension damageSize = new Dimension(widths.damageWidth, 0);
-        JLabel damageLabel = UIUtils.createStyledLabel(
-            String.valueOf(record.getHit()),
-            SwingConstants.CENTER,
-            FontManager.getRunescapeBoldFont(),
-            UIUtils.getDamageColor(record.getHit()),
-            damageSize
-        );
-        UIUtils.addDebugBorder(damageLabel, Color.BLUE, config.debugMode());
-
-        Dimension npcSize = new Dimension(widths.npcWidth, 0);
-        JLabel npcLabel = UIUtils.createStyledLabel(
-            "<html>" + record.getNpcName() + "</html>",
-            SwingConstants.LEFT,
-            null,
-            UIUtils.applyAlpha(Color.WHITE, alpha),
-            npcSize
-        );
-        UIUtils.addDebugBorderWithPadding(npcLabel, Color.GREEN, config.debugMode(), 8);
-
-        TickInfo tickInfo = calculateTickInfo(record, index);
-        Dimension tickSize = new Dimension(widths.tickWidth, 0);
-        JLabel tickLabel = UIUtils.createStyledLabel(
-            tickInfo.text,
-            SwingConstants.CENTER,
-            null,
-            UIUtils.applyAlpha(tickInfo.color, alpha),
-            tickSize
-        );
-        UIUtils.addDebugBorder(tickLabel, Color.YELLOW, config.debugMode());
-
-        JPanel textPanel = new JPanel(new BorderLayout());
-        textPanel.setBackground(panel.getBackground());
-        textPanel.add(damageLabel, BorderLayout.WEST);
-        textPanel.add(npcLabel, BorderLayout.CENTER);
-        textPanel.add(tickLabel, BorderLayout.EAST);
-        textPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
-        
-        panel.add(textPanel, BorderLayout.CENTER);
-        return panel;
+        addHitForPlayer(player, hit, npc, weaponId, tickCount, attackSpeed, specialAttack);
     }
     
-    private TickInfo calculateTickInfo(HitRecord record, int index) {
-        if (index >= hitRecords.size() - 1) {
-            return new TickInfo("", Color.WHITE);
-        }
+    public void addTestPlayers() {
+        // Add some hardcoded test data for different players
+        addHitForPlayer("You", 25, "Goblin", 4151, 100, 4, false);
+        addHitForPlayer("You", 18, "Cow", 4151, 104, 4, false);
         
-        int ticksSince = record.getTickCount() - hitRecords.get(index + 1).getTickCount();
-        int previousAttackSpeed = hitRecords.get(index + 1).getAttackSpeed();
+        addHitForPlayer("Player1", 32, "Dragon", 4587, 200, 5, true);
+        addHitForPlayer("Player1", 15, "Goblin", 4587, 205, 5, false);
+        addHitForPlayer("Player1", 28, "Spider", 4587, 210, 5, false);
         
-        String tickText;
-        if (config.tickDisplayMode() == DamageHistoryConfig.TickDisplayMode.EXTRA_DELAYED_TICKS) {
-            int extraTicks = ticksSince - previousAttackSpeed;
-            tickText = String.format(" +%dt", extraTicks);
-        } else {
-            tickText = String.format(" +%dt", ticksSince);
-        }
+//        addHitForPlayer("Player2", 45, "Demon", 4153, 300, 4, true);
+//        addHitForPlayer("Player2", 22, "Rat", 4153, 304, 4, false);
         
-        Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed);
-        return new TickInfo(tickText, tickColor);
+        addHitForPlayer("Player3", 12, "Chicken", -1, 400, 4, false);
     }
-    
-    private void setIconWithOutline(JLabel iconLabel, BufferedImage image, boolean specialAttack) {
-        if (specialAttack) {
-            BufferedImage outlinedImage = UIUtils.addOutline(image, UIConstants.SPECIAL_ATTACK_OUTLINE_COLOR);
-            iconLabel.setIcon(new ImageIcon(outlinedImage));
-        } else {
-            iconLabel.setIcon(new ImageIcon(image));
-        }
-    }
+
+
 }
