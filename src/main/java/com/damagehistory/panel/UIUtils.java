@@ -41,11 +41,17 @@ public final class UIUtils {
         panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, panelHeight));
         panel.setPreferredSize(new Dimension(0, panelHeight));
         
-        Color borderColor = isRecent ? ColorScheme.BRAND_ORANGE : ColorScheme.DARK_GRAY_COLOR;
-        panel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, borderColor),
+        if (isRecent) {
+            panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(ColorScheme.BRAND_ORANGE, 2),
                 BorderFactory.createEmptyBorder(4, UIConstants.BORDER_PADDING, 4, UIConstants.BORDER_PADDING)
-        ));
+            ));
+        } else {
+            panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 1, 0, ColorScheme.DARK_GRAY_COLOR),
+                BorderFactory.createEmptyBorder(4, UIConstants.BORDER_PADDING, 4, UIConstants.BORDER_PADDING)
+            ));
+        }
         
         return panel;
     }

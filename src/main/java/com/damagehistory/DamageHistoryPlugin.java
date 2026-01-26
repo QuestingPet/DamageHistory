@@ -7,6 +7,7 @@ import javax.inject.Inject;
 
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
@@ -109,8 +110,8 @@ public class DamageHistoryPlugin extends Plugin {
         var itemStats = itemManager.getItemStats(predictedHit.getEquippedWeaponId());
         int attackSpeed = itemStats != null ? itemStats.getEquipment().getAspeed() : DEFAULT_ATTACK_SPEED;
         log.debug(itemStats.toString());
-        boolean specialAttack = Math.random() < 0.5;
-        
+        boolean specialAttack = predictedHit.isSpecialAttack();
+
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
         
         if (panel != null) {
@@ -118,6 +119,12 @@ public class DamageHistoryPlugin extends Plugin {
                 panel.addHit(hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed, specialAttack)
             );
         }
+    }
+
+    @Subscribe
+    public void onHitsplatApplied(HitsplatApplied hitsplatApplied) {
+        // log the hitsplat amount on actor
+        log.debug("Hitsplat: {} - {}", hitsplatApplied.getActor().getName(), hitsplatApplied.getHitsplat().getAmount());
     }
 
     @Subscribe
