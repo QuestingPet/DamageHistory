@@ -1,6 +1,7 @@
 package com.damagehistory;
 
 import com.damagehistory.panel.DamageHistoryPanel;
+import com.damagehistory.panel.PlayerHitRecord;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
 import javax.inject.Inject;
@@ -14,6 +15,9 @@ import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PluginMessage;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.party.PartyMember;
+import net.runelite.client.party.PartyService;
+import net.runelite.client.party.WSClient;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
@@ -23,6 +27,7 @@ import net.runelite.client.util.ImageUtil;
 import javax.swing.SwingUtilities;
 import java.awt.image.BufferedImage;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @PluginDescriptor(
@@ -34,7 +39,7 @@ public class DamageHistoryPlugin extends Plugin {
     private static final String PREDICTED_HIT_MESSAGE = "predicted-hit";
     private static final String CONFIG_GROUP = "DamageHistory";
     private static final int DEFAULT_ATTACK_SPEED = 4;
-    
+
     @Inject
     private Client client;
 
@@ -53,6 +58,12 @@ public class DamageHistoryPlugin extends Plugin {
     @Inject
     private ClientToolbar clientToolbar;
 
+    @Inject
+    private PartyService partyService;
+
+    @Inject
+    private WSClient wsClient;
+
     private DamageHistoryPanel panel;
     private NavigationButton navButton;
     private final BufferedImage icon = ImageUtil.loadImageResource(DamageHistoryPlugin.class, "panel-icon.png");
@@ -67,13 +78,14 @@ public class DamageHistoryPlugin extends Plugin {
                 .priority(5)
                 .panel(panel)
                 .build();
-        
+
         clientToolbar.addNavigation(navButton);
-        
+
         // Initialize test data after panel is fully constructed
-        SwingUtilities.invokeLater(() -> panel.addTestPlayers());
-        
+//        SwingUtilities.invokeLater(() -> panel.addTestPlayers());
+
         log.debug("Damage History started!");
+        debugReinit();
     }
 
     @Override
@@ -83,6 +95,11 @@ public class DamageHistoryPlugin extends Plugin {
         log.debug("Damage History stopped!");
     }
 
+    private void debugReinit() {
+        panel.setClient(client);
+        panel.setPartyService(partyService);
+    }
+
     @Subscribe
     public void onPluginMessage(PluginMessage pluginMessage) {
         if (!PLUGIN_NAMESPACE.equals(pluginMessage.getNamespace()) ||
@@ -90,25 +107,26 @@ public class DamageHistoryPlugin extends Plugin {
             return;
         }
 
+        log.debug("in party: {}", partyService.isInParty());
         try {
             processPredictedHit(pluginMessage);
         } catch (Exception e) {
             log.error("Error processing predicted hit", e);
         }
     }
-    
+
     private void processPredictedHit(PluginMessage pluginMessage) {
         Map<String, Object> data = pluginMessage.getData();
         Object json = data.get("value");
         log.debug(json.toString());
-        
+
         PredictedHit predictedHit = gson.fromJson(json.toString(), PredictedHit.class);
 
         // Skip PvP hits and invalid NPCs
         if (predictedHit.isOpponentIsPlayer() || predictedHit.getNpcId() == -1) {
             return;
         }
-        
+
         String weaponName = itemManager.getItemComposition(predictedHit.getEquippedWeaponId()).getMembersName();
         int hit = predictedHit.getHit();
         String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
@@ -118,22 +136,31 @@ public class DamageHistoryPlugin extends Plugin {
         boolean specialAttack = predictedHit.isSpecialAttack();
 
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
-        
-        String[] players = {"You", "Player1", "Player2"};
+
+        String[] players = partyService.isInParty() ? 
+            partyService.getMembers().stream().map(PartyMember::getDisplayName).toArray(String[]::new) :
+            new String[]{ client.getLocalPlayer().getName(), "Player1", "Player2" };
         String player = players[playerCounter % players.length];
         playerCounter++;
-        
+
         if (panel != null) {
-            SwingUtilities.invokeLater(() -> 
-                panel.addHitForPlayer(player, hit, npcName, predictedHit.getEquippedWeaponId(), client.getTickCount(), attackSpeed, specialAttack)
+            PlayerHitRecord record = new PlayerHitRecord(
+                    player,
+                    hit,
+                    npcName,
+                    predictedHit.getEquippedWeaponId(),
+                    client.getTickCount(),
+                    attackSpeed,
+                    specialAttack
             );
+            SwingUtilities.invokeLater(() -> panel.addHit(record));
         }
     }
 
     @Subscribe
     public void onHitsplatApplied(HitsplatApplied hitsplatApplied) {
         // log the hitsplat amount on actor
-        log.debug("Hitsplat: {} - {}", hitsplatApplied.getActor().getName(), hitsplatApplied.getHitsplat().getAmount());
+//        log.debug("Hitsplat: {} - {}", hitsplatApplied.getActor().getName(), hitsplatApplied.getHitsplat().getAmount());
     }
 
     @Subscribe

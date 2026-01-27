@@ -8,9 +8,13 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import lombok.Setter;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.party.PartyMember;
+import net.runelite.client.party.PartyService;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
+import net.runelite.api.Client;
 
 @Singleton
 public class DamageHistoryPanel extends PluginPanel {
@@ -19,6 +23,14 @@ public class DamageHistoryPanel extends PluginPanel {
 
     @Inject
     private DamageHistoryConfig config;
+    
+    @Inject
+    @Setter
+    private Client client;
+    
+    @Inject
+    @Setter
+    private PartyService partyService;
 
     private final JPanel playersContainer = new JPanel();
     private final Map<String, PlayerPanel> playerPanels = new HashMap<>();
@@ -59,20 +71,21 @@ public class DamageHistoryPanel extends PluginPanel {
         layoutPanel.add(scrollPane);
     }
 
-    public void addHit(int hit, String npcName, int weaponId, int tickCount, int attackSpeed, boolean specialAttack) {
-        addHitForPlayer("You", hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
-    }
-    
-    public void addHitForPlayer(String playerName, int hit, String npcName, int weaponId, int tickCount, int attackSpeed, boolean specialAttack) {
-        PlayerPanel playerPanel = playerPanels.get(playerName);
+    public void addHit(PlayerHitRecord record) {
+        PlayerPanel playerPanel = playerPanels.get(record.getPlayerName());
         if (playerPanel == null) {
-            playerPanel = new PlayerPanel(playerName, itemManager, config);
-            playerPanels.put(playerName, playerPanel);
-            playersContainer.add(playerPanel);
+            playerPanel = new PlayerPanel(record.getPlayerName(), itemManager, config);
+            playerPanels.put(record.getPlayerName(), playerPanel);
+            
+            // Add local player at the top, others at the end
+            if (client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(record.getPlayerName())) {
+                playersContainer.add(playerPanel, 0);
+            } else {
+                playersContainer.add(playerPanel);
+            }
             playersContainer.revalidate();
         }
         
-        PlayerHitRecord record = new PlayerHitRecord(playerName, hit, npcName, weaponId, tickCount, attackSpeed, specialAttack);
         playerPanel.addHit(record);
     }
 
@@ -91,13 +104,15 @@ public class DamageHistoryPanel extends PluginPanel {
         playerPanels.clear();
         playersContainer.removeAll();
         testRecordCounter = 0;
-        addTestPlayers();
+//        addTestPlayers();
         playersContainer.revalidate();
         playersContainer.repaint();
     }
     
     private void addTestRecord() {
-        String[] players = {"You", "Player1", "Player2", "Player3"};
+        String[] players = partyService.isInParty() ?
+            partyService.getMembers().stream().map(PartyMember::getDisplayName).toArray(String[]::new) :
+            new String[]{client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : "You", "Player1", "Player2", "Player3"};
         String[] npcs = {"Goblin", "Cow", "Rat", "Spider", "Something that is very long"};
 
         // Cycle through players in order
@@ -111,22 +126,23 @@ public class DamageHistoryPanel extends PluginPanel {
         int attackSpeed = 4;
         boolean specialAttack = Math.random() < 0.3;
         
-        addHitForPlayer(player, hit, npc, weaponId, tickCount, attackSpeed, specialAttack);
+        PlayerHitRecord record = new PlayerHitRecord(player, hit, npc, weaponId, tickCount, attackSpeed, specialAttack);
+        addHit(record);
     }
     
     public void addTestPlayers() {
         // Add some hardcoded test data for different players
-        addHitForPlayer("You", 25, "Goblin", 4151, 100, 4, false);
-        addHitForPlayer("You", 18, "Cow", 4151, 104, 4, false);
+        addHit(new PlayerHitRecord("You", 25, "Goblin", 4151, 100, 4, false));
+        addHit(new PlayerHitRecord("You", 18, "Cow", 4151, 104, 4, false));
         
-        addHitForPlayer("Player1", 32, "Dragon", 4587, 200, 5, true);
-        addHitForPlayer("Player1", 15, "Goblin", 4587, 205, 5, false);
-        addHitForPlayer("Player1", 28, "Spider", 4587, 210, 5, false);
+        addHit(new PlayerHitRecord("Player1", 32, "Dragon", 4587, 200, 5, true));
+        addHit(new PlayerHitRecord("Player1", 15, "Goblin", 4587, 205, 5, false));
+        addHit(new PlayerHitRecord("Player1", 28, "Spider", 4587, 210, 5, false));
         
-//        addHitForPlayer("Player2", 45, "Demon", 4153, 300, 4, true);
-//        addHitForPlayer("Player2", 22, "Rat", 4153, 304, 4, false);
+//        addHit(new PlayerHitRecord("Player2", 45, "Demon", 4153, 300, 4, true));
+//        addHit(new PlayerHitRecord("Player2", 22, "Rat", 4153, 304, 4, false));
         
-        addHitForPlayer("Player3", 12, "Chicken", -1, 400, 4, false);
+        addHit(new PlayerHitRecord("Player3", 12, "Chicken", -1, 400, 4, false));
     }
 
 

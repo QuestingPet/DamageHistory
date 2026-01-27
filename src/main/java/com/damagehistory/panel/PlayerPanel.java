@@ -216,7 +216,7 @@ public class PlayerPanel extends JPanel {
         iconLabel.setPreferredSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
         iconLabel.setMinimumSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
         iconLabel.setMaximumSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
-        
+
         if (record.getWeaponId() == -1) {
             setIconWithOutline(iconLabel, FIST_IMAGE, record.isSpecialAttack());
         } else {
