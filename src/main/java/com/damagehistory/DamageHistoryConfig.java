@@ -54,16 +54,6 @@ public interface DamageHistoryConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "showOverlay",
-		name = "Show Overlay",
-		description = "Display recent hits overlay on screen"
-	)
-	default boolean showOverlay()
-	{
-		return true;
-	}
-
-	@ConfigItem(
 		keyName = "clearOnPartyChange",
 		name = "Clear on Party Change",
 		description = "Clear other players' damage history when joining a new party"
