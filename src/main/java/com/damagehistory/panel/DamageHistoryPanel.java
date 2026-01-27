@@ -162,7 +162,7 @@ public class DamageHistoryPanel extends PluginPanel {
             emptyText.setForeground(Color.WHITE);
             emptyText.setBackground(ColorScheme.DARK_GRAY_COLOR);
             emptyText.setEditable(false);
-            emptyText.setBorder(new EmptyBorder(20, 20, 20, 20));
+            emptyText.setBorder(new EmptyBorder(5, 5, 5, 5));
             emptyText.setPreferredSize(new Dimension(200, 300));
 
             emptyPanel.add(emptyText, BorderLayout.CENTER);
