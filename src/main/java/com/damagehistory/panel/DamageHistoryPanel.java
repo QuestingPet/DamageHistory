@@ -1,7 +1,6 @@
 package com.damagehistory.panel;
 
 import com.damagehistory.DamageHistoryConfig;
-import com.damagehistory.DamageHistoryOverlay;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,13 +9,12 @@ import javax.inject.Singleton;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import lombok.Setter;
+import net.runelite.api.Client;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
-import net.runelite.api.Client;
-import javax.swing.ScrollPaneConstants;
 
 @Singleton
 public class DamageHistoryPanel extends PluginPanel {
@@ -33,9 +31,6 @@ public class DamageHistoryPanel extends PluginPanel {
     @Inject
     @Setter
     private PartyService partyService;
-
-    @Setter
-    private DamageHistoryOverlay overlay;
 
     private final JPanel basePanel = new JPanel();
     private final Map<String, PlayerPanel> playerPanels = new HashMap<>();
@@ -99,11 +94,6 @@ public class DamageHistoryPanel extends PluginPanel {
         }
 
         playerPanel.addHit(record);
-
-        // Also update overlay if available
-        if (overlay != null) {
-            overlay.addHit(record);
-        }
     }
 
 
@@ -183,11 +173,6 @@ public class DamageHistoryPanel extends PluginPanel {
         checkEmpty();
         basePanel.revalidate();
         basePanel.repaint();
-
-        // Also clear overlay if available
-        if (overlay != null) {
-            overlay.clearHistory();
-        }
     }
 
     private void addTestRecord() {

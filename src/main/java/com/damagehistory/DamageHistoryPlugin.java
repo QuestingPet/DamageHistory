@@ -4,17 +4,19 @@ import com.damagehistory.panel.DamageHistoryPanel;
 import com.damagehistory.panel.PlayerHitRecord;
 import com.google.gson.Gson;
 import com.google.inject.Provides;
+import java.awt.image.BufferedImage;
+import java.util.Map;
 import javax.inject.Inject;
-
+import javax.swing.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
 import net.runelite.api.events.HitsplatApplied;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
-import net.runelite.client.events.PluginMessage;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.PartyChanged;
+import net.runelite.client.events.PluginMessage;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.game.ItemStats;
 import net.runelite.client.party.PartyMember;
@@ -26,11 +28,6 @@ import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
 import net.runelite.client.util.ImageUtil;
-
-import javax.swing.SwingUtilities;
-import java.awt.image.BufferedImage;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @PluginDescriptor(
@@ -71,7 +68,6 @@ public class DamageHistoryPlugin extends Plugin {
     private OverlayManager overlayManager;
 
     private DamageHistoryPanel panel;
-    private DamageHistoryOverlay overlay;
     private NavigationButton navButton;
     private final BufferedImage icon = ImageUtil.loadImageResource(DamageHistoryPlugin.class, "panel-icon.png");
     private int playerCounter = 0;
@@ -79,8 +75,7 @@ public class DamageHistoryPlugin extends Plugin {
     @Override
     protected void startUp() throws Exception {
         panel = injector.getInstance(DamageHistoryPanel.class);
-        overlay = injector.getInstance(DamageHistoryOverlay.class);
-        
+
         navButton = NavigationButton.builder()
                 .tooltip("Damage History")
                 .icon(icon)
@@ -89,10 +84,6 @@ public class DamageHistoryPlugin extends Plugin {
                 .build();
 
         clientToolbar.addNavigation(navButton);
-        
-        if (config.showOverlay()) {
-            overlayManager.add(overlay);
-        }
 
         // Initialize test data after panel is fully constructed
 //        SwingUtilities.invokeLater(() -> panel.addTestPlayers());
@@ -104,9 +95,7 @@ public class DamageHistoryPlugin extends Plugin {
     @Override
     protected void shutDown() throws Exception {
         clientToolbar.removeNavigation(navButton);
-        overlayManager.remove(overlay);
         panel = null;
-        overlay = null;
         log.debug("Damage History stopped!");
     }
 
@@ -114,7 +103,6 @@ public class DamageHistoryPlugin extends Plugin {
 //        panel = new DamageHistoryPanel();
         panel.setClient(client);
         panel.setPartyService(partyService);
-        panel.setOverlay(overlay);
     }
 
     @Subscribe
@@ -179,9 +167,6 @@ public class DamageHistoryPlugin extends Plugin {
             );
             SwingUtilities.invokeLater(() -> {
                 panel.addHit(record);
-                if (overlay != null) {
-                    overlay.addHit(record);
-                }
             });
         }
     }
@@ -203,14 +188,6 @@ public class DamageHistoryPlugin extends Plugin {
     public void onConfigChanged(ConfigChanged configChanged) {
         if (CONFIG_GROUP.equals(configChanged.getGroup()) && panel != null) {
             SwingUtilities.invokeLater(() -> panel.refreshPanel());
-            
-            if ("showOverlay".equals(configChanged.getKey())) {
-                if (config.showOverlay()) {
-                    overlayManager.add(overlay);
-                } else {
-                    overlayManager.remove(overlay);
-                }
-            }
         }
     }
 
