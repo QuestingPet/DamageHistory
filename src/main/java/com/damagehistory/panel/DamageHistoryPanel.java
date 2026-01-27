@@ -117,6 +117,7 @@ public class DamageHistoryPanel extends PluginPanel {
             partyService.getMembers().stream().map(PartyMember::getDisplayName).toArray(String[]::new) :
             new String[]{client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : "You", "Player1", "Player2", "Player3"};
         String[] npcs = {"Goblin", "Cow", "Rat", "Spider", "Something that is very long"};
+        int[] weaponIds = {27275, 25739, 21003, 25731, 26219, 13652, 27690, 4151, 12926};
 
         // Cycle through players in order
         String player = players[testRecordCounter % players.length];
@@ -124,7 +125,7 @@ public class DamageHistoryPanel extends PluginPanel {
         
         int hit = (int)(Math.random() * 50);
         String npc = npcs[(int)(Math.random() * npcs.length)];
-        int weaponId = 4151; // Whip ID
+        int weaponId = weaponIds[(int)(Math.random() * weaponIds.length)];
         int tickCount = prevTickCount + (int)(Math.random() * 100);
         prevTickCount = tickCount;
         int attackSpeed = 4;
