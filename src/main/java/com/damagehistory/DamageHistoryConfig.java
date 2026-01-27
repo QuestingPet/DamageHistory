@@ -52,4 +52,14 @@ public interface DamageHistoryConfig extends Config
 	{
 		return 5;
 	}
+
+	@ConfigItem(
+		keyName = "showOverlay",
+		name = "Show Overlay",
+		description = "Display recent hits overlay on screen"
+	)
+	default boolean showOverlay()
+	{
+		return true;
+	}
 }
