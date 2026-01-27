@@ -18,7 +18,7 @@ import net.runelite.client.util.AsyncBufferedImage;
 
 public class PlayerPanel extends JPanel {
     private static final BufferedImage FIST_IMAGE = ImageUtil.loadImageResource(PlayerPanel.class, "fist.png");
-    
+
     @Inject
     private ItemManager itemManager;
 
@@ -39,7 +39,7 @@ public class PlayerPanel extends JPanel {
         this.config = config;
         this.client = client;
         this.parentPanel = parentPanel;
-        
+
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         setBorder(new EmptyBorder(2, 2, 12, 2));
@@ -49,14 +49,14 @@ public class PlayerPanel extends JPanel {
         headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         headerPanel.setBorder(new EmptyBorder(4, 8, 4, 8));
-        
+
         JLabel nameLabel = new JLabel(playerName);
         nameLabel.setForeground(Color.WHITE);
         nameLabel.setFont(FontManager.getRunescapeBoldFont());
-        
+
         JLabel collapseLabel = new JLabel("▼");
         collapseLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-        
+
         headerPanel.add(nameLabel, BorderLayout.WEST);
         headerPanel.add(collapseLabel, BorderLayout.EAST);
 
@@ -71,13 +71,13 @@ public class PlayerPanel extends JPanel {
         mainPanel.setFocusable(false);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(hitsContainer, BorderLayout.CENTER);
-        
+
         // Make entire panel clickable for collapse/expand
         addClickListeners(this);
         addClickListeners(mainPanel);
         addClickListeners(hitsContainer);
         addClickListeners(headerPanel);
-        
+
         add(mainPanel, BorderLayout.CENTER);
     }
 
@@ -99,11 +99,11 @@ public class PlayerPanel extends JPanel {
 
     public void addHit(PlayerHitRecord record) {
         hitRecords.add(0, record);
-        
+
         if (hitRecords.size() > UIConstants.MAX_HIT_RECORDS) {
             hitRecords.remove(hitRecords.size() - 1);
         }
-        
+
         updateHeader();
         refreshPanel();
     }
@@ -115,17 +115,17 @@ public class PlayerPanel extends JPanel {
 
     private void updateHeader() {
         headerPanel.removeAll();
-        
+
         JLabel nameLabel = new JLabel(playerName);
         nameLabel.setForeground(Color.WHITE);
         nameLabel.setFont(FontManager.getRunescapeBoldFont());
-        
+
         headerPanel.add(nameLabel, BorderLayout.WEST);
-        
+
         // Right side panel for clear and collapse buttons
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
         rightPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
-        
+
         // Clear button (always visible if there are hits)
         if (!hitRecords.isEmpty()) {
             JLabel clearLabel = new JLabel("✕");
@@ -148,42 +148,42 @@ public class PlayerPanel extends JPanel {
             });
             rightPanel.add(clearLabel);
         }
-        
+
         // Collapse button (only show if there are multiple records)
         if (hitRecords.size() > 1) {
             JLabel collapseLabel = new JLabel(collapsed ? "▶" : "▼");
             collapseLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
             rightPanel.add(collapseLabel);
         }
-        
+
         if (rightPanel.getComponentCount() > 0) {
             headerPanel.add(rightPanel, BorderLayout.EAST);
         }
-        
+
         headerPanel.revalidate();
         headerPanel.repaint();
     }
-    
+
     public void refreshPanel() {
         hitsContainer.removeAll();
 
         LayoutCalculator.ColumnWidths widths = LayoutCalculator.calculateColumnWidths(
-            hitRecords.stream().map(r -> new HitRecord(r.getHit(), r.getNpcName(), r.getWeaponId(), 
-                r.getTickCount(), r.getAttackSpeed(), r.isSpecialAttack())).collect(Collectors.toList()), 
+            hitRecords.stream().map(r -> new HitRecord(r.getHit(), r.getNpcName(), r.getWeaponId(),
+                r.getTickCount(), r.getAttackSpeed(), r.isSpecialAttack())).collect(Collectors.toList()),
             this
         );
 
         // Show only the configured number of recent hits
         boolean isLocalPlayer = client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(playerName);
-        int maxHits = isLocalPlayer ? config.maxHitsToShow() : config.maxHitsToShowOthers();
+        int maxHits = isLocalPlayer ? config.maxHitsToShowSelf() : config.maxHitsToShowOthers();
         int hitsToShow = Math.min(hitRecords.size(), maxHits);
-        
+
         // Show latest hit first (always visible)
         PlayerHitRecord latestRecord = hitRecords.get(0);
         JPanel latestHitPanel = createHitPanel(latestRecord, 0, widths);
         addClickListeners(latestHitPanel);
         hitsContainer.add(latestHitPanel);
-        
+
         // Show remaining hits if not collapsed
         if (!collapsed && hitsToShow > 1) {
             for (int i = 1; i < hitsToShow; i++) {
@@ -196,7 +196,7 @@ public class PlayerPanel extends JPanel {
 
         hitsContainer.revalidate();
         hitsContainer.repaint();
-        
+
         // Force parent containers to revalidate for proper height adjustment
         Container parent = getParent();
         while (parent != null) {
@@ -208,9 +208,9 @@ public class PlayerPanel extends JPanel {
     private JPanel createHitPanel(PlayerHitRecord record, int index, LayoutCalculator.ColumnWidths widths) {
         boolean isRecent = index == 0;
         float alpha = isRecent ? UIConstants.RECENT_HIT_ALPHA : UIConstants.OLD_HIT_ALPHA;
-        
+
         JPanel panel = UIUtils.createHitPanelBase(false);
-        
+
         JLabel iconLabel = new JLabel();
         iconLabel.setPreferredSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
         iconLabel.setMinimumSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));
@@ -262,15 +262,15 @@ public class PlayerPanel extends JPanel {
         textPanel.add(npcLabel, BorderLayout.CENTER);
         textPanel.add(tickLabel, BorderLayout.EAST);
         textPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
-        
+
         panel.add(textPanel, BorderLayout.CENTER);
         return panel;
     }
-    
+
     private TickInfo calculateTickInfo(PlayerHitRecord record, int index) {
         Integer ticksSince = null;
         Integer previousAttackSpeed = null;
-        
+
         // Use stored tick delay information if available
         if (record.getTicksSincePrevious() != null && record.getPreviousAttackSpeed() != null) {
             ticksSince = record.getTicksSincePrevious();
@@ -281,19 +281,19 @@ public class PlayerPanel extends JPanel {
             ticksSince = record.getTickCount() - hitRecords.get(index + 1).getTickCount();
             previousAttackSpeed = hitRecords.get(index + 1).getAttackSpeed();
         }
-        
+
         if (ticksSince == null || previousAttackSpeed == null) {
             return new TickInfo("", Color.WHITE);
         }
-        
+
         String tickText = config.tickDisplayMode() == DamageHistoryConfig.TickDisplayMode.EXTRA_DELAYED_TICKS
             ? String.format(" +%dt", ticksSince - previousAttackSpeed)
             : String.format(" +%dt", ticksSince);
-            
+
         Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed);
         return new TickInfo(tickText, tickColor);
     }
-    
+
     private void setIconWithOutline(JLabel iconLabel, BufferedImage image, boolean specialAttack) {
         if (specialAttack) {
             BufferedImage outlinedImage = UIUtils.addOutline(image, UIConstants.SPECIAL_ATTACK_OUTLINE_COLOR);
