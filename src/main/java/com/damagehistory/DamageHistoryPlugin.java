@@ -16,6 +16,7 @@ import net.runelite.client.events.PluginMessage;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.PartyChanged;
 import net.runelite.client.game.ItemManager;
+import net.runelite.client.game.ItemStats;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.party.WSClient;
@@ -146,9 +147,16 @@ public class DamageHistoryPlugin extends Plugin {
         String weaponName = itemManager.getItemComposition(predictedHit.getEquippedWeaponId()).getMembersName();
         int hit = predictedHit.getHit();
         String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
-        var itemStats = itemManager.getItemStats(predictedHit.getEquippedWeaponId());
+        int weaponId = predictedHit.getEquippedWeaponId();
+        ItemStats itemStats = weaponId == -1 ? null : itemManager.getItemStats(weaponId);
         int attackSpeed = itemStats != null ? itemStats.getEquipment().getAspeed() : DEFAULT_ATTACK_SPEED;
-        log.debug(itemStats.toString());
+
+        // Both Accurate and Rapid are reported as RANGING, but assume the player is playing on Rapid, which
+        // attacks one tick faster.
+        if (predictedHit.getAttackStyle() == PredictedHit.AttackStyle.RANGING) {
+            attackSpeed -= 1;
+        }
+//        log.debug(itemStats.toString());
         boolean specialAttack = predictedHit.isSpecialAttack();
 
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
@@ -164,7 +172,7 @@ public class DamageHistoryPlugin extends Plugin {
                     player,
                     hit,
                     npcName,
-                    predictedHit.getEquippedWeaponId(),
+                    weaponId,
                     client.getTickCount(),
                     attackSpeed,
                     specialAttack
