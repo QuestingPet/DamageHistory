@@ -111,6 +111,19 @@ public class DamageHistoryPanel extends PluginPanel {
         }
     }
 
+    public void clearOtherPlayers() {
+        String localPlayerName = client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : null;
+        playerPanels.entrySet().removeIf(entry -> {
+            if (!entry.getKey().equals(localPlayerName)) {
+                basePanel.remove(entry.getValue());
+                return true;
+            }
+            return false;
+        });
+        basePanel.revalidate();
+        basePanel.repaint();
+    }
+
     public void refreshPanel() {
         for (PlayerPanel playerPanel : playerPanels.values()) {
             playerPanel.refreshPanel();

@@ -14,6 +14,7 @@ import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.PluginMessage;
 import net.runelite.client.events.ConfigChanged;
+import net.runelite.client.events.PartyChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
@@ -181,6 +182,13 @@ public class DamageHistoryPlugin extends Plugin {
     public void onHitsplatApplied(HitsplatApplied hitsplatApplied) {
         // log the hitsplat amount on actor
 //        log.debug("Hitsplat: {} - {}", hitsplatApplied.getActor().getName(), hitsplatApplied.getHitsplat().getAmount());
+    }
+
+    @Subscribe
+    public void onPartyChanged(PartyChanged partyChanged) {
+        if (panel != null) {
+            SwingUtilities.invokeLater(() -> panel.clearOtherPlayers());
+        }
     }
 
     @Subscribe
