@@ -53,6 +53,16 @@ public interface DamageHistoryConfig extends Config {
     }
 
     @ConfigItem(
+            keyName = "sendDamageHistoryOverParty",
+            name = "Send Damage History over party",
+            description = "Send damage history information over party",
+            position = 4
+    )
+    default boolean sendDamageHistoryOverParty() {
+        return true;
+    }
+
+    @ConfigItem(
             keyName = "debugMode",
             name = "Border Debug Mode",
             description = "Show border colors for debugging layout",

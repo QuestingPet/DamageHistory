@@ -8,7 +8,8 @@ import net.runelite.client.party.messages.PartyMessage;
 @EqualsAndHashCode(callSuper = true)
 @Value
 @AllArgsConstructor
-public class PredictedHitPartyMessage extends PartyMessage {
+public class DamageHistoryPartyMessage extends PartyMessage {
 
     PredictedHit predictedHit;
+    String playerName;
 }
