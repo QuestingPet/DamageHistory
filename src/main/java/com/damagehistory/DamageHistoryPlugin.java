@@ -186,7 +186,7 @@ public class DamageHistoryPlugin extends Plugin {
 
     @Subscribe
     public void onPartyChanged(PartyChanged partyChanged) {
-        if (panel != null) {
+        if (panel != null && config.clearOnPartyChange()) {
             SwingUtilities.invokeLater(() -> panel.clearOtherPlayers());
         }
     }

@@ -62,4 +62,14 @@ public interface DamageHistoryConfig extends Config
 	{
 		return true;
 	}
+
+	@ConfigItem(
+		keyName = "clearOnPartyChange",
+		name = "Clear on Party Change",
+		description = "Clear other players' damage history when joining a new party"
+	)
+	default boolean clearOnPartyChange()
+	{
+		return true;
+	}
 }
