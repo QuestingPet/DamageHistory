@@ -156,6 +156,17 @@ public class DamageHistoryPlugin extends Plugin {
         playerCounter++;
 
         if (panel != null) {
+            // Get the previous hit for this player to calculate tick delay
+            PlayerHitRecord previousHit = panel.getLatestHitForPlayer(player);
+            
+            Integer ticksSincePrevious = null;
+            Integer previousAttackSpeed = null;
+            
+            if (previousHit != null) {
+                ticksSincePrevious = client.getTickCount() - previousHit.getTickCount();
+                previousAttackSpeed = previousHit.getAttackSpeed();
+            }
+            
             PlayerHitRecord record = new PlayerHitRecord(
                     player,
                     hit,
@@ -163,7 +174,9 @@ public class DamageHistoryPlugin extends Plugin {
                     weaponId,
                     client.getTickCount(),
                     attackSpeed,
-                    specialAttack
+                    specialAttack,
+                    ticksSincePrevious,
+                    previousAttackSpeed
             );
             SwingUtilities.invokeLater(() -> {
                 panel.addHit(record);

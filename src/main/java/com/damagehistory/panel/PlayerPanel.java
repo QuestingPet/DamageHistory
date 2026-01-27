@@ -93,6 +93,10 @@ public class PlayerPanel extends JPanel {
         });
     }
 
+    public PlayerHitRecord getLatestHit() {
+        return hitRecords.isEmpty() ? null : hitRecords.get(0);
+    }
+
     public void addHit(PlayerHitRecord record) {
         hitRecords.add(0, record);
         
@@ -264,21 +268,28 @@ public class PlayerPanel extends JPanel {
     }
     
     private TickInfo calculateTickInfo(PlayerHitRecord record, int index) {
-        if (index >= hitRecords.size() - 1) {
+        Integer ticksSince = null;
+        Integer previousAttackSpeed = null;
+        
+        // Use stored tick delay information if available
+        if (record.getTicksSincePrevious() != null && record.getPreviousAttackSpeed() != null) {
+            ticksSince = record.getTicksSincePrevious();
+            previousAttackSpeed = record.getPreviousAttackSpeed();
+        }
+        // Fallback to old calculation method for records without stored info
+        else if (index < hitRecords.size() - 1) {
+            ticksSince = record.getTickCount() - hitRecords.get(index + 1).getTickCount();
+            previousAttackSpeed = hitRecords.get(index + 1).getAttackSpeed();
+        }
+        
+        if (ticksSince == null || previousAttackSpeed == null) {
             return new TickInfo("", Color.WHITE);
         }
         
-        int ticksSince = record.getTickCount() - hitRecords.get(index + 1).getTickCount();
-        int previousAttackSpeed = hitRecords.get(index + 1).getAttackSpeed();
-        
-        String tickText;
-        if (config.tickDisplayMode() == DamageHistoryConfig.TickDisplayMode.EXTRA_DELAYED_TICKS) {
-            int extraTicks = ticksSince - previousAttackSpeed;
-            tickText = String.format(" +%dt", extraTicks);
-        } else {
-            tickText = String.format(" +%dt", ticksSince);
-        }
-        
+        String tickText = config.tickDisplayMode() == DamageHistoryConfig.TickDisplayMode.EXTRA_DELAYED_TICKS
+            ? String.format(" +%dt", ticksSince - previousAttackSpeed)
+            : String.format(" +%dt", ticksSince);
+            
         Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed);
         return new TickInfo(tickText, tickColor);
     }

@@ -11,4 +11,6 @@ public class PlayerHitRecord {
     int tickCount;
     int attackSpeed;
     boolean specialAttack;
+    Integer ticksSincePrevious;
+    Integer previousAttackSpeed;
 }
