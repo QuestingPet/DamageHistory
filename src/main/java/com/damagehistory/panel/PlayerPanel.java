@@ -31,12 +31,14 @@ public class PlayerPanel extends JPanel {
     private final List<PlayerHitRecord> hitRecords = new ArrayList<>();
     private boolean collapsed = false;
     private final Client client;
+    private final DamageHistoryPanel parentPanel;
 
-    public PlayerPanel(String playerName, ItemManager itemManager, DamageHistoryConfig config, Client client) {
+    public PlayerPanel(String playerName, ItemManager itemManager, DamageHistoryConfig config, Client client, DamageHistoryPanel parentPanel) {
         this.playerName = playerName;
         this.itemManager = itemManager;
         this.config = config;
         this.client = client;
+        this.parentPanel = parentPanel;
         
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -108,7 +110,6 @@ public class PlayerPanel extends JPanel {
     }
 
     private void updateHeader() {
-        // Header stays the same - just name and collapse button
         headerPanel.removeAll();
         
         JLabel nameLabel = new JLabel(playerName);
@@ -117,11 +118,42 @@ public class PlayerPanel extends JPanel {
         
         headerPanel.add(nameLabel, BorderLayout.WEST);
         
-        // Only show collapse button if there are multiple records
+        // Right side panel for clear and collapse buttons
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 0));
+        rightPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
+        
+        // Clear button (always visible if there are hits)
+        if (!hitRecords.isEmpty()) {
+            JLabel clearLabel = new JLabel("✕");
+            clearLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+            clearLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            clearLabel.setToolTipText("Clear all hits");
+            clearLabel.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    clearAllHits();
+                }
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    clearLabel.setForeground(Color.WHITE);
+                }
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    clearLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
+                }
+            });
+            rightPanel.add(clearLabel);
+        }
+        
+        // Collapse button (only show if there are multiple records)
         if (hitRecords.size() > 1) {
             JLabel collapseLabel = new JLabel(collapsed ? "▶" : "▼");
             collapseLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-            headerPanel.add(collapseLabel, BorderLayout.EAST);
+            rightPanel.add(collapseLabel);
+        }
+        
+        if (rightPanel.getComponentCount() > 0) {
+            headerPanel.add(rightPanel, BorderLayout.EAST);
         }
         
         headerPanel.revalidate();
@@ -131,38 +163,30 @@ public class PlayerPanel extends JPanel {
     public void refreshPanel() {
         hitsContainer.removeAll();
 
-        if (hitRecords.isEmpty()) {
-            JLabel emptyLabel = new JLabel("No hits recorded");
-            emptyLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
-            emptyLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            emptyLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
-            hitsContainer.add(emptyLabel);
-        } else {
-            LayoutCalculator.ColumnWidths widths = LayoutCalculator.calculateColumnWidths(
-                hitRecords.stream().map(r -> new HitRecord(r.getHit(), r.getNpcName(), r.getWeaponId(), 
-                    r.getTickCount(), r.getAttackSpeed(), r.isSpecialAttack())).collect(Collectors.toList()), 
-                this
-            );
+        LayoutCalculator.ColumnWidths widths = LayoutCalculator.calculateColumnWidths(
+            hitRecords.stream().map(r -> new HitRecord(r.getHit(), r.getNpcName(), r.getWeaponId(), 
+                r.getTickCount(), r.getAttackSpeed(), r.isSpecialAttack())).collect(Collectors.toList()), 
+            this
+        );
 
-            // Show only the configured number of recent hits
-            boolean isLocalPlayer = client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(playerName);
-            int maxHits = isLocalPlayer ? config.maxHitsToShow() : config.maxHitsToShowOthers();
-            int hitsToShow = Math.min(hitRecords.size(), maxHits);
-            
-            // Show latest hit first (always visible)
-            PlayerHitRecord latestRecord = hitRecords.get(0);
-            JPanel latestHitPanel = createHitPanel(latestRecord, 0, widths);
-            addClickListeners(latestHitPanel);
-            hitsContainer.add(latestHitPanel);
-            
-            // Show remaining hits if not collapsed
-            if (!collapsed && hitsToShow > 1) {
-                for (int i = 1; i < hitsToShow; i++) {
-                    PlayerHitRecord record = hitRecords.get(i);
-                    JPanel hitPanel = createHitPanel(record, i, widths);
-                    addClickListeners(hitPanel);
-                    hitsContainer.add(hitPanel);
-                }
+        // Show only the configured number of recent hits
+        boolean isLocalPlayer = client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(playerName);
+        int maxHits = isLocalPlayer ? config.maxHitsToShow() : config.maxHitsToShowOthers();
+        int hitsToShow = Math.min(hitRecords.size(), maxHits);
+        
+        // Show latest hit first (always visible)
+        PlayerHitRecord latestRecord = hitRecords.get(0);
+        JPanel latestHitPanel = createHitPanel(latestRecord, 0, widths);
+        addClickListeners(latestHitPanel);
+        hitsContainer.add(latestHitPanel);
+        
+        // Show remaining hits if not collapsed
+        if (!collapsed && hitsToShow > 1) {
+            for (int i = 1; i < hitsToShow; i++) {
+                PlayerHitRecord record = hitRecords.get(i);
+                JPanel hitPanel = createHitPanel(record, i, widths);
+                addClickListeners(hitPanel);
+                hitsContainer.add(hitPanel);
             }
         }
 
@@ -265,6 +289,12 @@ public class PlayerPanel extends JPanel {
             iconLabel.setIcon(new ImageIcon(outlinedImage));
         } else {
             iconLabel.setIcon(new ImageIcon(image));
+        }
+    }
+
+    private void clearAllHits() {
+        if (parentPanel != null) {
+            parentPanel.removePlayerPanel(playerName);
         }
     }
 

@@ -81,7 +81,7 @@ public class DamageHistoryPanel extends PluginPanel {
     public void addHit(PlayerHitRecord record) {
         PlayerPanel playerPanel = playerPanels.get(record.getPlayerName());
         if (playerPanel == null) {
-            playerPanel = new PlayerPanel(record.getPlayerName(), itemManager, config, client);
+            playerPanel = new PlayerPanel(record.getPlayerName(), itemManager, config, client, this);
             playerPanels.put(record.getPlayerName(), playerPanel);
             
             // Add local player at the top, others at the end
@@ -101,6 +101,15 @@ public class DamageHistoryPanel extends PluginPanel {
         }
     }
 
+
+    public void removePlayerPanel(String playerName) {
+        PlayerPanel panel = playerPanels.remove(playerName);
+        if (panel != null) {
+            basePanel.remove(panel);
+            basePanel.revalidate();
+            basePanel.repaint();
+        }
+    }
 
     public void refreshPanel() {
         for (PlayerPanel playerPanel : playerPanels.values()) {
