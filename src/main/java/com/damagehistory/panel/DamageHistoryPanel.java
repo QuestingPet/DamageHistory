@@ -71,6 +71,10 @@ public class DamageHistoryPanel extends PluginPanel {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         add(scrollPane, BorderLayout.CENTER);
+
+        checkEmpty();
+        basePanel.revalidate();
+        basePanel.repaint();
     }
 
     public PlayerHitRecord getLatestHitForPlayer(String playerName) {
