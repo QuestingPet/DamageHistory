@@ -25,11 +25,11 @@ public class DamageHistoryPanel extends PluginPanel {
 
     @Inject
     private DamageHistoryConfig config;
-    
+
     @Inject
     @Setter
     private Client client;
-    
+
     @Inject
     @Setter
     private PartyService partyService;
@@ -79,11 +79,16 @@ public class DamageHistoryPanel extends PluginPanel {
     }
 
     public void addHit(PlayerHitRecord record) {
+        // Remove empty message if it exists
+        if (playerPanels.isEmpty()) {
+            basePanel.removeAll();
+        }
+        
         PlayerPanel playerPanel = playerPanels.get(record.getPlayerName());
         if (playerPanel == null) {
             playerPanel = new PlayerPanel(record.getPlayerName(), itemManager, config, client, this);
             playerPanels.put(record.getPlayerName(), playerPanel);
-            
+
             // Add local player at the top, others at the end
             if (client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(record.getPlayerName())) {
                 basePanel.add(playerPanel, 0);
@@ -92,9 +97,9 @@ public class DamageHistoryPanel extends PluginPanel {
             }
             basePanel.revalidate();
         }
-        
+
         playerPanel.addHit(record);
-        
+
         // Also update overlay if available
         if (overlay != null) {
             overlay.addHit(record);
@@ -106,9 +111,12 @@ public class DamageHistoryPanel extends PluginPanel {
         PlayerPanel panel = playerPanels.remove(playerName);
         if (panel != null) {
             basePanel.remove(panel);
-            basePanel.revalidate();
-            basePanel.repaint();
         }
+
+        checkEmpty();
+
+        basePanel.revalidate();
+        basePanel.repaint();
     }
 
     public void clearOtherPlayers() {
@@ -120,16 +128,49 @@ public class DamageHistoryPanel extends PluginPanel {
             }
             return false;
         });
+        checkEmpty();
         basePanel.revalidate();
         basePanel.repaint();
     }
 
     public void refreshPanel() {
-        for (PlayerPanel playerPanel : playerPanels.values()) {
-            playerPanel.refreshPanel();
+        if (!checkEmpty()) {
+            for (PlayerPanel playerPanel : playerPanels.values()) {
+                playerPanel.refreshPanel();
+            }
         }
+
         basePanel.revalidate();
         basePanel.repaint();
+    }
+
+    private boolean checkEmpty() {
+        if (playerPanels.isEmpty()) {
+            basePanel.removeAll();
+            JPanel emptyPanel = new JPanel(new BorderLayout());
+            emptyPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+            JTextPane emptyText = new JTextPane();
+            emptyText.setContentType("text/html");
+            emptyText.setText("<html><div style='text-align: center;'>" +
+                "The <span style='color: #00FF00;'>Customizable XP Drops</span> plugin is required for populating data.<br><br>" +
+                "If you're not seeing any data here after hitting monsters, " +
+                "please go install it from the Plugin Hub.<br><br>" +
+                "If you don't want the customized xp drops, but still want this plugin's functionality, " +
+                "you can uncheck <span style='color: #FF0000;'>\"Use Customizable XP drops\"</span> from that plugin" +
+                "</div></html>");
+            emptyText.setForeground(Color.WHITE);
+            emptyText.setBackground(ColorScheme.DARK_GRAY_COLOR);
+            emptyText.setEditable(false);
+            emptyText.setBorder(new EmptyBorder(20, 20, 20, 20));
+            emptyText.setPreferredSize(new Dimension(200, 300));
+
+            emptyPanel.add(emptyText, BorderLayout.CENTER);
+            basePanel.add(emptyPanel);
+            return true;
+        }
+
+        return false;
     }
 
     private void clearHistory() {
@@ -139,15 +180,16 @@ public class DamageHistoryPanel extends PluginPanel {
         playerPanels.clear();
         basePanel.removeAll();
         testRecordCounter = 0;
+        checkEmpty();
         basePanel.revalidate();
         basePanel.repaint();
-        
+
         // Also clear overlay if available
         if (overlay != null) {
             overlay.clearHistory();
         }
     }
-    
+
     private void addTestRecord() {
         String[] players = partyService.isInParty() ?
             partyService.getMembers().stream().map(PartyMember::getDisplayName).toArray(String[]::new) :
@@ -158,7 +200,7 @@ public class DamageHistoryPanel extends PluginPanel {
         // Cycle through players in order
         String player = players[testRecordCounter % players.length];
         testRecordCounter++;
-        
+
         int hit = (int)(Math.random() * 50);
         String npc = npcs[(int)(Math.random() * npcs.length)];
         int weaponId = weaponIds[(int)(Math.random() * weaponIds.length)];
@@ -166,23 +208,23 @@ public class DamageHistoryPanel extends PluginPanel {
         prevTickCount = tickCount;
         int attackSpeed = 4;
         boolean specialAttack = Math.random() < 0.3;
-        
+
         PlayerHitRecord record = new PlayerHitRecord(player, hit, npc, weaponId, tickCount, attackSpeed, specialAttack);
         addHit(record);
     }
-    
+
     public void addTestPlayers() {
         // Add some hardcoded test data for different players
         addHit(new PlayerHitRecord("You", 25, "Goblin", 4151, 100, 4, false));
         addHit(new PlayerHitRecord("You", 18, "Cow", 4151, 104, 4, false));
-        
+
         addHit(new PlayerHitRecord("Player1", 32, "Dragon", 4587, 200, 5, true));
         addHit(new PlayerHitRecord("Player1", 15, "Goblin", 4587, 205, 5, false));
         addHit(new PlayerHitRecord("Player1", 28, "Spider", 4587, 210, 5, false));
-        
+
 //        addHit(new PlayerHitRecord("Player2", 45, "Demon", 4153, 300, 4, true));
 //        addHit(new PlayerHitRecord("Player2", 22, "Rat", 4153, 304, 4, false));
-        
+
         addHit(new PlayerHitRecord("Player3", 12, "Chicken", -1, 400, 4, false));
     }
 
