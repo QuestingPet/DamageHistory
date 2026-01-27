@@ -9,8 +9,8 @@ public interface DamageHistoryConfig extends Config
 {
 	enum TickDisplayMode
 	{
-		TOTAL_TICKS,
-		EXTRA_DELAYED_TICKS;
+		EXTRA_DELAYED_TICKS,
+		TOTAL_TICKS;
 	}
 
 	@ConfigItem(
@@ -20,7 +20,7 @@ public interface DamageHistoryConfig extends Config
 	)
 	default TickDisplayMode tickDisplayMode()
 	{
-		return TickDisplayMode.TOTAL_TICKS;
+		return TickDisplayMode.EXTRA_DELAYED_TICKS;
 	}
 
 	@ConfigItem(
@@ -34,21 +34,21 @@ public interface DamageHistoryConfig extends Config
 	}
 
 	@ConfigItem(
-		keyName = "maxHitsToShow",
-		name = "Hits to Show (Self)",
-		description = "Maximum number of recent hits to display for yourself"
-	)
-	default int maxHitsToShow()
-	{
-		return 5;
-	}
-
-	@ConfigItem(
 		keyName = "maxHitsToShowOthers",
 		name = "Hits to Show (Others)",
 		description = "Maximum number of recent hits to display for other players"
 	)
 	default int maxHitsToShowOthers()
+	{
+		return 5;
+	}
+
+	@ConfigItem(
+		keyName = "maxHitsToShow",
+		name = "Hits to Show (Self)",
+		description = "Maximum number of recent hits to display for yourself"
+	)
+	default int maxHitsToShow()
 	{
 		return 5;
 	}
