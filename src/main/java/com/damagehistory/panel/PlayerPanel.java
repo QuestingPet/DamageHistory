@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import net.runelite.api.Client;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
@@ -29,21 +30,23 @@ public class PlayerPanel extends JPanel {
     private final JPanel hitsContainer;
     private final List<PlayerHitRecord> hitRecords = new ArrayList<>();
     private boolean collapsed = false;
+    private final Client client;
 
-    public PlayerPanel(String playerName, ItemManager itemManager, DamageHistoryConfig config) {
+    public PlayerPanel(String playerName, ItemManager itemManager, DamageHistoryConfig config, Client client) {
         this.playerName = playerName;
         this.itemManager = itemManager;
         this.config = config;
+        this.client = client;
         
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
         setBorder(new EmptyBorder(2, 2, 12, 2));
+        setFocusable(false);
 
         // Header panel with player name and collapse button
         headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(ColorScheme.DARKER_GRAY_COLOR);
         headerPanel.setBorder(new EmptyBorder(4, 8, 4, 8));
-        headerPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         
         JLabel nameLabel = new JLabel(playerName);
         nameLabel.setForeground(Color.WHITE);
@@ -54,27 +57,38 @@ public class PlayerPanel extends JPanel {
         
         headerPanel.add(nameLabel, BorderLayout.WEST);
         headerPanel.add(collapseLabel, BorderLayout.EAST);
-        
-        // Add click listener to toggle collapse
-        headerPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                toggleCollapse();
-                collapseLabel.setText(collapsed ? "▶" : "▼");
-            }
-        });
 
         // Hits container
         hitsContainer = new JPanel();
         hitsContainer.setLayout(new BoxLayout(hitsContainer, BoxLayout.Y_AXIS));
         hitsContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        hitsContainer.setFocusable(false);
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        mainPanel.setFocusable(false);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
         mainPanel.add(hitsContainer, BorderLayout.CENTER);
         
+        // Make entire panel clickable for collapse/expand
+        addClickListeners(this);
+        addClickListeners(mainPanel);
+        addClickListeners(hitsContainer);
+        addClickListeners(headerPanel);
+        
         add(mainPanel, BorderLayout.CENTER);
+    }
+
+    private void addClickListeners(JComponent component) {
+        component.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (hitRecords.size() > 1) {
+                    toggleCollapse();
+                    updateHeader();
+                }
+            }
+        });
     }
 
     public void addHit(PlayerHitRecord record) {
@@ -108,18 +122,6 @@ public class PlayerPanel extends JPanel {
             JLabel collapseLabel = new JLabel(collapsed ? "▶" : "▼");
             collapseLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
             headerPanel.add(collapseLabel, BorderLayout.EAST);
-            
-            headerPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            // Add click listener to toggle collapse
-            headerPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent e) {
-                    toggleCollapse();
-                    collapseLabel.setText(collapsed ? "▶" : "▼");
-                }
-            });
-        } else {
-            headerPanel.setCursor(Cursor.getDefaultCursor());
         }
         
         headerPanel.revalidate();
@@ -142,51 +144,25 @@ public class PlayerPanel extends JPanel {
                 this
             );
 
-            // Add latest hit first (always visible)
+            // Show only the configured number of recent hits
+            boolean isLocalPlayer = client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(playerName);
+            int maxHits = isLocalPlayer ? config.maxHitsToShow() : config.maxHitsToShowOthers();
+            int hitsToShow = Math.min(hitRecords.size(), maxHits);
+            
+            // Show latest hit first (always visible)
             PlayerHitRecord latestRecord = hitRecords.get(0);
             JPanel latestHitPanel = createHitPanel(latestRecord, 0, widths);
-            
-            // Only make it clickable if there are multiple records
-            if (hitRecords.size() > 1) {
-                latestHitPanel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                latestHitPanel.addMouseListener(new java.awt.event.MouseAdapter() {
-                    @Override
-                    public void mouseClicked(java.awt.event.MouseEvent e) {
-                        toggleCollapse();
-                        updateHeader();
-                    }
-                });
-            }
-            
+            addClickListeners(latestHitPanel);
             hitsContainer.add(latestHitPanel);
             
-            // Add remaining hits in scrollable container (collapsible)
-            if (!collapsed && hitRecords.size() > 1) {
-                JPanel scrollableHitsPanel = new JPanel();
-                scrollableHitsPanel.setLayout(new BoxLayout(scrollableHitsPanel, BoxLayout.Y_AXIS));
-                scrollableHitsPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-                
-                for (int i = 1; i < hitRecords.size(); i++) {
+            // Show remaining hits if not collapsed
+            if (!collapsed && hitsToShow > 1) {
+                for (int i = 1; i < hitsToShow; i++) {
                     PlayerHitRecord record = hitRecords.get(i);
                     JPanel hitPanel = createHitPanel(record, i, widths);
-                    scrollableHitsPanel.add(hitPanel);
+                    addClickListeners(hitPanel);
+                    hitsContainer.add(hitPanel);
                 }
-                
-                JScrollPane scrollPane = new JScrollPane(scrollableHitsPanel);
-                scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-                scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-                scrollPane.setBorder(null);
-                
-                // Calculate dynamic height based on content, max 200px
-                int contentHeight = scrollableHitsPanel.getPreferredSize().height;
-                int scrollHeight = Math.min(contentHeight, 200);
-                
-                scrollPane.setPreferredSize(new Dimension(0, scrollHeight));
-                scrollPane.setMinimumSize(new Dimension(0, scrollHeight));
-                scrollPane.setMaximumSize(new Dimension(Integer.MAX_VALUE, scrollHeight));
-                scrollPane.getVerticalScrollBar().setUnitIncrement(10);
-                
-                hitsContainer.add(scrollPane);
             }
         }
 
@@ -206,11 +182,6 @@ public class PlayerPanel extends JPanel {
         float alpha = isRecent ? UIConstants.RECENT_HIT_ALPHA : UIConstants.OLD_HIT_ALPHA;
         
         JPanel panel = UIUtils.createHitPanelBase(false);
-        
-        // Add drop shadow to the latest record only if there are multiple records
-        if (index == 0 && hitRecords.size() > 1) {
-            panel.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 2, 0, new java.awt.Color(0, 0, 0, 50)));
-        }
         
         JLabel iconLabel = new JLabel();
         iconLabel.setPreferredSize(new Dimension(UIConstants.ICON_SIZE, UIConstants.ICON_SIZE));

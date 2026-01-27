@@ -96,6 +96,7 @@ public class DamageHistoryPlugin extends Plugin {
     }
 
     private void debugReinit() {
+//        panel = new DamageHistoryPanel();
         panel.setClient(client);
         panel.setPartyService(partyService);
     }

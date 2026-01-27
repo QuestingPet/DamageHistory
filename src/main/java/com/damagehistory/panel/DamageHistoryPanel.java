@@ -15,6 +15,7 @@ import net.runelite.client.party.PartyService;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
 import net.runelite.api.Client;
+import javax.swing.ScrollPaneConstants;
 
 @Singleton
 public class DamageHistoryPanel extends PluginPanel {
@@ -32,18 +33,21 @@ public class DamageHistoryPanel extends PluginPanel {
     @Setter
     private PartyService partyService;
 
-    private final JPanel playersContainer = new JPanel();
+    private final JPanel basePanel = new JPanel();
     private final Map<String, PlayerPanel> playerPanels = new HashMap<>();
     private int testRecordCounter = 0;
+    private int prevTickCount = 0;
 
     public DamageHistoryPanel() {
-        setBorder(new EmptyBorder(6, 6, 6, 6));
-        setBackground(ColorScheme.DARK_GRAY_COLOR);
+        super(false);
         setLayout(new BorderLayout());
 
-        final JPanel layoutPanel = new JPanel();
-        layoutPanel.setLayout(new BoxLayout(layoutPanel, BoxLayout.Y_AXIS));
-        add(layoutPanel, BorderLayout.NORTH);
+        basePanel.setBorder(new EmptyBorder(BORDER_OFFSET, BORDER_OFFSET, BORDER_OFFSET, BORDER_OFFSET));
+        basePanel.setLayout(new net.runelite.client.ui.DynamicGridLayout(0, 1, 0, 5));
+
+        final JPanel topPanel = new JPanel();
+        topPanel.setBorder(new EmptyBorder(BORDER_OFFSET, 2, BORDER_OFFSET, 2));
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
@@ -57,56 +61,55 @@ public class DamageHistoryPanel extends PluginPanel {
         clearButton.addActionListener(e -> clearHistory());
         buttonPanel.add(clearButton);
         buttonPanel.setBorder(new EmptyBorder(0, 0, 8, 0));
-        layoutPanel.add(buttonPanel);
+        topPanel.add(buttonPanel);
 
-        playersContainer.setLayout(new BoxLayout(playersContainer, BoxLayout.Y_AXIS));
-        playersContainer.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        add(topPanel, BorderLayout.NORTH);
 
-        JScrollPane scrollPane = new JScrollPane(playersContainer);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        
-        layoutPanel.add(scrollPane);
+        // Wrap content to anchor to top and prevent expansion
+        final JPanel northPanel = new JPanel(new BorderLayout());
+        northPanel.add(basePanel, BorderLayout.NORTH);
+        final JScrollPane scrollPane = new JScrollPane(northPanel);
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     public void addHit(PlayerHitRecord record) {
         PlayerPanel playerPanel = playerPanels.get(record.getPlayerName());
         if (playerPanel == null) {
-            playerPanel = new PlayerPanel(record.getPlayerName(), itemManager, config);
+            playerPanel = new PlayerPanel(record.getPlayerName(), itemManager, config, client);
             playerPanels.put(record.getPlayerName(), playerPanel);
             
             // Add local player at the top, others at the end
             if (client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(record.getPlayerName())) {
-                playersContainer.add(playerPanel, 0);
+                basePanel.add(playerPanel, 0);
             } else {
-                playersContainer.add(playerPanel);
+                basePanel.add(playerPanel);
             }
-            playersContainer.revalidate();
+            basePanel.revalidate();
         }
         
         playerPanel.addHit(record);
     }
 
+
     public void refreshPanel() {
         for (PlayerPanel playerPanel : playerPanels.values()) {
             playerPanel.refreshPanel();
         }
-        playersContainer.revalidate();
-        playersContainer.repaint();
+        basePanel.revalidate();
+        basePanel.repaint();
     }
 
     private void clearHistory() {
         for (PlayerPanel panel : playerPanels.values()) {
-            playersContainer.remove(panel);
+            basePanel.remove(panel);
         }
         playerPanels.clear();
-        playersContainer.removeAll();
+        basePanel.removeAll();
         testRecordCounter = 0;
-//        addTestPlayers();
-        playersContainer.revalidate();
-        playersContainer.repaint();
+        basePanel.revalidate();
+        basePanel.repaint();
     }
     
     private void addTestRecord() {
@@ -122,7 +125,8 @@ public class DamageHistoryPanel extends PluginPanel {
         int hit = (int)(Math.random() * 50);
         String npc = npcs[(int)(Math.random() * npcs.length)];
         int weaponId = 4151; // Whip ID
-        int tickCount = (int)(Math.random() * 1000);
+        int tickCount = prevTickCount + (int)(Math.random() * 100);
+        prevTickCount = tickCount;
         int attackSpeed = 4;
         boolean specialAttack = Math.random() < 0.3;
         
