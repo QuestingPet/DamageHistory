@@ -46,11 +46,18 @@ public class DamageHistoryPanel extends PluginPanel {
         topPanel.setBorder(new EmptyBorder(BORDER_OFFSET, 2, BORDER_OFFSET, 2));
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel buttonPanel = new JPanel(new BorderLayout());
         buttonPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        
+        JLabel titleLabel = new JLabel("Damage History");
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD));
+        titleLabel.setBorder(new EmptyBorder(0, 8, 0, 0));
+        buttonPanel.add(titleLabel, BorderLayout.WEST);
+        
         JButton clearButton = new JButton("Clear History");
         clearButton.addActionListener(e -> clearHistory());
-        buttonPanel.add(clearButton);
+        buttonPanel.add(clearButton, BorderLayout.EAST);
         buttonPanel.setBorder(new EmptyBorder(0, 0, 8, 0));
         topPanel.add(buttonPanel);
 
