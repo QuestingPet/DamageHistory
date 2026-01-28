@@ -33,7 +33,7 @@ import net.runelite.client.util.ImageUtil;
 )
 public class DamageHistoryPlugin extends Plugin {
 
-    private static final String CXP_PLUGIN_NAMESPACE = "customizable-xp-drops";
+    private static final String CXD_PLUGIN_NAMESPACE = "customizable-xp-drops";
     private static final String PREDICTED_HIT_MESSAGE = "predicted-hit";
     private static final String CONFIG_GROUP = "DamageHistory";
     private static final int DEFAULT_ATTACK_SPEED = 4;
@@ -100,7 +100,7 @@ public class DamageHistoryPlugin extends Plugin {
 
     @Subscribe
     public void onPluginMessage(PluginMessage pluginMessage) {
-        if (!CXP_PLUGIN_NAMESPACE.equals(pluginMessage.getNamespace()) ||
+        if (!CXD_PLUGIN_NAMESPACE.equals(pluginMessage.getNamespace()) ||
             !PREDICTED_HIT_MESSAGE.equals(pluginMessage.getName())) {
             return;
         }
