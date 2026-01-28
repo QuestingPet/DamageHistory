@@ -110,7 +110,7 @@ public class DamageHistoryPlugin extends Plugin {
 
         PredictedHit predictedHit = gson.fromJson(json.toString(), PredictedHit.class);
         String playerName = client.getLocalPlayer().getName();
-        processPredictedHit(predictedHit, "Greg M");
+        processPredictedHit(predictedHit, playerName);
 
         if (config.sendDamageHistoryOverParty()) {
             partyService.send(new DamageHistoryPartyMessage(predictedHit, playerName));
