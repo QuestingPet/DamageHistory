@@ -301,8 +301,8 @@ public class PlayerPanel extends JPanel {
         }
 
         String tickText = config.tickDisplayMode() == DamageHistoryConfig.TickDisplayMode.EXTRA_DELAYED_TICKS
-                ? String.format(" +%dt", ticksSince - previousAttackSpeed)
-                : String.format(" +%dt", ticksSince);
+                ? String.format(" +%dt", Math.max(0, ticksSince - previousAttackSpeed))
+                : String.format(" +%dt", Math.max(0, ticksSince));
 
         Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed, config);
         return new TickInfo(tickText, tickColor);

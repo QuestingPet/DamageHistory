@@ -1,5 +1,10 @@
 package com.damagehistory;
 
+import static com.damagehistory.PredictedHit.AttackStyle.CASTING;
+import static com.damagehistory.PredictedHit.AttackStyle.DEFENSIVE_CASTING;
+import static com.damagehistory.PredictedHit.AttackStyle.RANGING;
+import static net.runelite.api.gameval.VarbitID.AUTOCAST_SET;
+
 import com.damagehistory.panel.DamageHistoryPanel;
 import com.damagehistory.panel.PlayerHitRecord;
 import com.google.gson.Gson;
@@ -10,6 +15,8 @@ import javax.inject.Inject;
 import javax.swing.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.events.GameTick;
+import net.runelite.api.events.VarbitChanged;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
@@ -68,6 +75,7 @@ public class DamageHistoryPlugin extends Plugin {
     private DamageHistoryPanel panel;
     private NavigationButton navButton;
     private final BufferedImage icon = ImageUtil.loadImageResource(DamageHistoryPlugin.class, "panel-icon.png");
+    private boolean isAutoCasting;
 
     @Override
     protected void startUp() throws Exception {
@@ -108,6 +116,8 @@ public class DamageHistoryPlugin extends Plugin {
         Map<String, Object> data = pluginMessage.getData();
         Object json = data.get("value");
 
+        log.debug(json.toString());
+
         PredictedHit predictedHit = gson.fromJson(json.toString(), PredictedHit.class);
         String playerName = client.getLocalPlayer().getName();
         int currentTick = client.getTickCount();
@@ -133,9 +143,13 @@ public class DamageHistoryPlugin extends Plugin {
 
         // Both Accurate and Rapid are reported as RANGING, but assume the player is playing on Rapid, which
         // attacks one tick faster.
-        if (predictedHit.getAttackStyle() == PredictedHit.AttackStyle.RANGING) {
+
+        if (predictedHit.getAttackStyle() == RANGING) {
             attackSpeed -= 1;
+        } else if (isCastingSpell(predictedHit.getAttackStyle())) {
+            attackSpeed = 5;
         }
+
         boolean specialAttack = predictedHit.isSpecialAttack();
 
         log.debug("{} hit {} on {}", weaponName, hit, npcName);
@@ -163,6 +177,7 @@ public class DamageHistoryPlugin extends Plugin {
                     ticksSincePrevious,
                     previousAttackSpeed
             );
+            log.debug(record.toString());
             SwingUtilities.invokeLater(() -> {
                 panel.addHit(record);
             });
@@ -192,6 +207,20 @@ public class DamageHistoryPlugin extends Plugin {
     }
 
     @Subscribe
+    public void onGameTick(GameTick gameTick) {
+        if (client.getSelectedWidget() != null) {
+            log.debug("{} - WIDGET: {}", client.getTickCount(), client.getSelectedWidget().getName());
+        }
+    }
+
+    @Subscribe
+    public void onVarbitChanged(VarbitChanged varbitChanged) {
+        if (varbitChanged.getVarbitId() == AUTOCAST_SET) {
+            isAutoCasting = varbitChanged.getValue() == 1;
+        }
+    }
+
+    @Subscribe
     public void onConfigChanged(ConfigChanged configChanged) {
         if (CONFIG_GROUP.equals(configChanged.getGroup()) && panel != null) {
             log.debug("Config changed: {} = {}", configChanged.getKey(), configChanged.getNewValue());
@@ -202,5 +231,9 @@ public class DamageHistoryPlugin extends Plugin {
     @Provides
     DamageHistoryConfig provideConfig(ConfigManager configManager) {
         return configManager.getConfig(DamageHistoryConfig.class);
+    }
+
+    private boolean isCastingSpell(PredictedHit.AttackStyle attackStyle) {
+        return (attackStyle == CASTING || attackStyle == DEFENSIVE_CASTING) && isAutoCasting;
     }
 }
