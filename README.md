@@ -13,6 +13,8 @@ This plugin requires the **Customizable XP Drops** plugin from the Plugin Hub to
 - Tick delays may appear incorrect when a previous hit was a miss, even though you attacked
 
 ## Changelog
+### v1.1
+- Fixed mage spell tick speed for manual and auto casting
 
 ### v1.0 - Initial Release
 - Initial plugin release

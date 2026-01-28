@@ -15,8 +15,10 @@ import javax.inject.Inject;
 import javax.swing.*;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
-import net.runelite.api.events.GameTick;
+import net.runelite.api.MenuAction;
+import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.VarbitChanged;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
@@ -76,6 +78,7 @@ public class DamageHistoryPlugin extends Plugin {
     private NavigationButton navButton;
     private final BufferedImage icon = ImageUtil.loadImageResource(DamageHistoryPlugin.class, "panel-icon.png");
     private boolean isAutoCasting;
+    private boolean isManualCasting;
 
     @Override
     protected void startUp() throws Exception {
@@ -134,21 +137,14 @@ public class DamageHistoryPlugin extends Plugin {
             return;
         }
 
+        int weaponId = predictedHit.getEquippedWeaponId();
         String weaponName = itemManager.getItemComposition(predictedHit.getEquippedWeaponId()).getMembersName();
         int hit = predictedHit.getHit();
         String npcName = client.getNpcDefinition(predictedHit.getNpcId()).getName();
-        int weaponId = predictedHit.getEquippedWeaponId();
-        ItemStats itemStats = weaponId == -1 ? null : itemManager.getItemStats(weaponId);
-        int attackSpeed = itemStats != null ? itemStats.getEquipment().getAspeed() : DEFAULT_ATTACK_SPEED;
 
-        // Both Accurate and Rapid are reported as RANGING, but assume the player is playing on Rapid, which
-        // attacks one tick faster.
-
-        if (predictedHit.getAttackStyle() == RANGING) {
-            attackSpeed -= 1;
-        } else if (isCastingSpell(predictedHit.getAttackStyle())) {
-            attackSpeed = 5;
-        }
+        int attackSpeed = determineAttackSpeed(weaponId, predictedHit.getAttackStyle());
+        // Manual casting only lasts one attack max per click
+        isManualCasting = false;
 
         boolean specialAttack = predictedHit.isSpecialAttack();
 
@@ -207,9 +203,11 @@ public class DamageHistoryPlugin extends Plugin {
     }
 
     @Subscribe
-    public void onGameTick(GameTick gameTick) {
-        if (client.getSelectedWidget() != null) {
-            log.debug("{} - WIDGET: {}", client.getTickCount(), client.getSelectedWidget().getName());
+    public void onMenuOptionClicked(MenuOptionClicked event) {
+        if ("Cast".equals(event.getMenuOption()) && event.getMenuAction() == MenuAction.WIDGET_TARGET_ON_NPC) {
+            isManualCasting = true;
+        } else {
+            isManualCasting = false;
         }
     }
 
@@ -233,7 +231,37 @@ public class DamageHistoryPlugin extends Plugin {
         return configManager.getConfig(DamageHistoryConfig.class);
     }
 
-    private boolean isCastingSpell(PredictedHit.AttackStyle attackStyle) {
-        return (attackStyle == CASTING || attackStyle == DEFENSIVE_CASTING) && isAutoCasting;
+    private boolean isAutoCastingMage(PredictedHit.AttackStyle attackStyle) {
+        boolean hasMageWeapon = attackStyle == CASTING || attackStyle == DEFENSIVE_CASTING;
+        return hasMageWeapon && isAutoCasting;
+    }
+
+    private int determineAttackSpeed(int weaponId, PredictedHit.AttackStyle attackStyle) {
+        if (weaponId == -1) {
+            return DEFAULT_ATTACK_SPEED;
+        }
+
+        if (isManualCasting) {
+            return 5;
+        }
+
+        if (isAutoCastingMage(attackStyle)) {
+            if (weaponId == ItemID.NIGHTMARE_STAFF_HARMONISED) {
+                return 4;
+            } else {
+                return 5;
+            }
+        }
+
+        ItemStats itemStats = itemManager.getItemStats(weaponId);
+        int attackSpeed = itemStats != null ? itemStats.getEquipment().getAspeed() : DEFAULT_ATTACK_SPEED;
+
+        // Both Accurate and Rapid are reported as RANGING, but assume the player is playing on Rapid, which attacks
+        // one tick faster.
+        if (attackStyle == RANGING) {
+            attackSpeed -= 1;
+        }
+
+        return attackSpeed;
     }
 }
