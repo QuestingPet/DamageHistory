@@ -4,7 +4,6 @@ import com.damagehistory.DamageHistoryConfig;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import net.runelite.client.ui.ColorScheme;
 
 public final class UIUtils {
@@ -65,26 +64,6 @@ public final class UIUtils {
         }
 
         return panel;
-    }
-
-    public static void addDebugBorder(JComponent component, Color color, boolean debugMode) {
-        if (debugMode) {
-            component.setBorder(BorderFactory.createLineBorder(color));
-        }
-    }
-
-    public static void addDebugBorderWithPadding(JComponent component,
-                                                 Color color,
-                                                 boolean debugMode,
-                                                 int leftPadding) {
-        if (debugMode) {
-            component.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(color),
-                    new EmptyBorder(0, leftPadding, 0, 0)
-            ));
-        } else {
-            component.setBorder(new EmptyBorder(0, leftPadding, 0, 0));
-        }
     }
 
     public static Color applyAlpha(Color color, float alpha) {

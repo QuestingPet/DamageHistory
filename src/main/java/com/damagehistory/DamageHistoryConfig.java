@@ -189,14 +189,4 @@ public interface DamageHistoryConfig extends Config {
         return Color.GREEN;
     }
 
-    @ConfigItem(
-            keyName = "debugMode",
-            name = "Border Debug Mode",
-            description = "Show border colors for debugging layout",
-            position = 100
-    )
-    default boolean debugMode() {
-        return false;
-    }
-
 }

@@ -239,7 +239,6 @@ public class PlayerPanel extends JPanel {
             AsyncBufferedImage weaponImage = itemManager.getImage(record.getWeaponId());
             weaponImage.onLoaded(() -> setIconWithOutline(iconLabel, weaponImage, record.isSpecialAttack()));
         }
-        UIUtils.addDebugBorder(iconLabel, Color.RED, config.debugMode());
         panel.add(iconLabel, BorderLayout.WEST);
 
         Dimension damageSize = new Dimension(widths.damageWidth, 0);
@@ -250,7 +249,6 @@ public class PlayerPanel extends JPanel {
                 UIUtils.getDamageColor(record.getHit(), config),
                 damageSize
         );
-        UIUtils.addDebugBorder(damageLabel, Color.BLUE, config.debugMode());
 
         Dimension npcSize = new Dimension(widths.npcWidth, 0);
         JLabel npcLabel = UIUtils.createStyledLabel(
@@ -260,7 +258,7 @@ public class PlayerPanel extends JPanel {
                 UIUtils.applyAlpha(Color.WHITE, alpha),
                 npcSize
         );
-        UIUtils.addDebugBorderWithPadding(npcLabel, Color.GREEN, config.debugMode(), 8);
+        npcLabel.setBorder(new EmptyBorder(0, 8, 0, 0));
 
         TickInfo tickInfo = calculateTickInfo(record, index);
         Dimension tickSize = new Dimension(widths.tickWidth, 0);
@@ -271,7 +269,6 @@ public class PlayerPanel extends JPanel {
                 UIUtils.applyAlpha(tickInfo.color, alpha),
                 tickSize
         );
-        UIUtils.addDebugBorder(tickLabel, Color.YELLOW, config.debugMode());
 
         JPanel textPanel = new JPanel(new BorderLayout());
         textPanel.setBackground(panel.getBackground());
