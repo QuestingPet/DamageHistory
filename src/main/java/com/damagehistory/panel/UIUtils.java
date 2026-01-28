@@ -1,5 +1,6 @@
 package com.damagehistory.panel;
 
+import com.damagehistory.DamageHistoryConfig;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
 
@@ -10,16 +11,16 @@ import java.awt.image.BufferedImage;
 
 public final class UIUtils {
     
-    public static Color getDamageColor(int damage) {
-        if (damage >= UIConstants.HIGH_DAMAGE_THRESHOLD) return UIConstants.HIGH_DAMAGE_COLOR;
-        if (damage >= UIConstants.MEDIUM_DAMAGE_THRESHOLD) return UIConstants.MEDIUM_DAMAGE_COLOR;
-        return UIConstants.LOW_DAMAGE_COLOR;
+    public static Color getDamageColor(int damage, DamageHistoryConfig config) {
+        if (damage >= config.highDamageThreshold()) return config.highDamageColor();
+        if (damage >= config.mediumDamageThreshold()) return config.mediumDamageColor();
+        return config.lowDamageColor();
     }
 
-    public static Color getTickDelayColor(int ticksSince, int attackSpeed) {
-        if (ticksSince <= attackSpeed) return UIConstants.GOOD_TIMING_COLOR;
-        if (ticksSince <= attackSpeed + UIConstants.TICK_DELAY_TOLERANCE) return UIConstants.OKAY_TIMING_COLOR;
-        return UIConstants.BAD_TIMING_COLOR;
+    public static Color getTickDelayColor(int ticksSince, int attackSpeed, DamageHistoryConfig config) {
+        if (ticksSince <= attackSpeed) return config.goodTimingColor();
+        if (ticksSince <= attackSpeed + config.tickDelayTolerance()) return config.okayTimingColor();
+        return config.badTimingColor();
     }
     
     public static JLabel createStyledLabel(String text, int alignment, Font font, Color color, Dimension size) {

@@ -230,7 +230,7 @@ public class PlayerPanel extends JPanel {
             String.valueOf(record.getHit()),
             SwingConstants.CENTER,
             FontManager.getRunescapeBoldFont(),
-            UIUtils.getDamageColor(record.getHit()),
+            UIUtils.getDamageColor(record.getHit(), config),
             damageSize
         );
         UIUtils.addDebugBorder(damageLabel, Color.BLUE, config.debugMode());
@@ -290,7 +290,7 @@ public class PlayerPanel extends JPanel {
             ? String.format(" +%dt", ticksSince - previousAttackSpeed)
             : String.format(" +%dt", ticksSince);
 
-        Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed);
+        Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed, config);
         return new TickInfo(tickText, tickColor);
     }
 

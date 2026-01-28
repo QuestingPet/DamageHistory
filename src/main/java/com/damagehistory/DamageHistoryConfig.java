@@ -1,8 +1,10 @@
 package com.damagehistory;
 
+import java.awt.*;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.ConfigSection;
 
 @ConfigGroup("DamageHistory")
 public interface DamageHistoryConfig extends Config {
@@ -29,7 +31,7 @@ public interface DamageHistoryConfig extends Config {
             position = 1
     )
     default int maxHitsToShowSelf() {
-        return 5;
+        return 10;
     }
 
     @ConfigItem(
@@ -60,6 +62,121 @@ public interface DamageHistoryConfig extends Config {
     )
     default boolean sendDamageHistoryOverParty() {
         return true;
+    }
+
+    @ConfigSection(
+            name = "Thresholds",
+            description = "Configure damage and timing thresholds",
+            closedByDefault = true,
+            position = 10
+    )
+    String thresholds = "thresholds";
+
+    @ConfigItem(
+            keyName = "tickDelayTolerance",
+            name = "Tick Delay Tolerance",
+            description = "Number of extra ticks allowed before timing is considered bad",
+            position = 11,
+            section = thresholds
+    )
+    default int tickDelayTolerance() {
+        return 2;
+    }
+
+    @ConfigItem(
+            keyName = "mediumDamageThreshold",
+            name = "Medium Damage Threshold",
+            description = "Minimum damage for medium damage color",
+            position = 12,
+            section = thresholds
+    )
+    default int mediumDamageThreshold() {
+        return 15;
+    }
+
+    @ConfigItem(
+            keyName = "highDamageThreshold",
+            name = "High Damage Threshold",
+            description = "Minimum damage for high damage color",
+            position = 13,
+            section = thresholds
+    )
+    default int highDamageThreshold() {
+        return 30;
+    }
+
+    @ConfigSection(
+            name = "Colors",
+            description = "Configure damage and timing colors",
+            closedByDefault = true,
+            position = 20
+    )
+    String colors = "colors";
+
+    @ConfigItem(
+            keyName = "badTimingColor",
+            name = "Bad Timing Color",
+            description = "Color for attacks with bad timing",
+            position = 21,
+            section = colors
+    )
+    default Color badTimingColor() {
+        return Color.RED;
+    }
+
+    @ConfigItem(
+            keyName = "okayTimingColor",
+            name = "Okay Timing Color",
+            description = "Color for attacks with okay timing",
+            position = 22,
+            section = colors
+    )
+    default Color okayTimingColor() {
+        return Color.YELLOW;
+    }
+
+    @ConfigItem(
+            keyName = "goodTimingColor",
+            name = "Good Timing Color",
+            description = "Color for attacks with good timing",
+            position = 23,
+            section = colors
+    )
+    default Color goodTimingColor() {
+        return Color.GREEN;
+    }
+
+    @ConfigItem(
+            keyName = "lowDamageColor",
+            name = "Low Damage Color",
+            description = "Color for low damage hits",
+            position = 24,
+            section = colors
+    )
+    default Color lowDamageColor() {
+        return Color.RED;
+    }
+
+    @ConfigItem(
+            keyName = "mediumDamageColor",
+            name = "Medium Damage Color",
+            description = "Color for medium damage hits",
+            position = 25,
+            section = colors
+    )
+    default Color mediumDamageColor() {
+        return Color.YELLOW;
+    }
+
+    @ConfigItem(
+            keyName = "highDamageColor",
+            name = "High Damage Color",
+            description = "Color for high damage hits",
+            position = 26,
+            section = colors
+    )
+    default Color highDamageColor() {
+        return Color.GREEN;
     }
 
     @ConfigItem(
