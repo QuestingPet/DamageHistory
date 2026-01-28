@@ -12,4 +12,5 @@ public class DamageHistoryPartyMessage extends PartyMessage {
 
     PredictedHit predictedHit;
     String playerName;
+    int serverTick;
 }

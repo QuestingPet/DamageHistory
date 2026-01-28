@@ -110,14 +110,15 @@ public class DamageHistoryPlugin extends Plugin {
 
         PredictedHit predictedHit = gson.fromJson(json.toString(), PredictedHit.class);
         String playerName = client.getLocalPlayer().getName();
-        processPredictedHit(predictedHit, playerName);
+        int currentTick = client.getTickCount();
+        processPredictedHit(predictedHit, playerName, currentTick);
 
         if (config.sendDamageHistoryOverParty() && partyService.isInParty()) {
-            partyService.send(new DamageHistoryPartyMessage(predictedHit, playerName));
+            partyService.send(new DamageHistoryPartyMessage(predictedHit, playerName, currentTick));
         }
     }
 
-    private void processPredictedHit(PredictedHit predictedHit, String playerName) {
+    private void processPredictedHit(PredictedHit predictedHit, String playerName, int serverTick) {
         // Skip PvP hits and invalid NPCs
         if (predictedHit.isOpponentIsPlayer() || predictedHit.getNpcId() == -1) {
             return;
@@ -147,7 +148,7 @@ public class DamageHistoryPlugin extends Plugin {
             Integer previousAttackSpeed = null;
 
             if (previousHit != null) {
-                ticksSincePrevious = client.getTickCount() - previousHit.getTickCount();
+                ticksSincePrevious = serverTick - previousHit.getTickCount();
                 previousAttackSpeed = previousHit.getAttackSpeed();
             }
 
@@ -156,7 +157,7 @@ public class DamageHistoryPlugin extends Plugin {
                     hit,
                     npcName,
                     weaponId,
-                    client.getTickCount(),
+                    serverTick,
                     attackSpeed,
                     specialAttack,
                     ticksSincePrevious,
@@ -178,7 +179,8 @@ public class DamageHistoryPlugin extends Plugin {
 
         clientThread.invoke(() -> processPredictedHit(
                 damageHistoryPartyMessage.getPredictedHit(),
-                damageHistoryPartyMessage.getPlayerName())
+                damageHistoryPartyMessage.getPlayerName(),
+                damageHistoryPartyMessage.getServerTick())
         );
     }
 
