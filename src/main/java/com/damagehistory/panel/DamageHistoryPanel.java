@@ -18,6 +18,7 @@ import net.runelite.client.ui.PluginPanel;
 
 @Singleton
 public class DamageHistoryPanel extends PluginPanel {
+
     @Inject
     private ItemManager itemManager;
 
@@ -91,7 +92,7 @@ public class DamageHistoryPanel extends PluginPanel {
         if (playerPanels.isEmpty()) {
             basePanel.removeAll();
         }
-        
+
         PlayerPanel playerPanel = playerPanels.get(record.getPlayerName());
         if (playerPanel == null) {
             playerPanel = new PlayerPanel(record.getPlayerName(), itemManager, config, client, this);
@@ -108,7 +109,6 @@ public class DamageHistoryPanel extends PluginPanel {
 
         playerPanel.addHit(record);
     }
-
 
     public void removePlayerPanel(String playerName) {
         PlayerPanel panel = playerPanels.remove(playerName);
@@ -156,12 +156,12 @@ public class DamageHistoryPanel extends PluginPanel {
             JTextPane emptyText = new JTextPane();
             emptyText.setContentType("text/html");
             emptyText.setText("<html><div style='text-align: center;'>" +
-                "The <span style='color: #00FF00;'>Customizable XP Drops</span> plugin is required for populating data.<br><br>" +
-                "If you're not seeing any data here after hitting monsters, " +
-                "please go install it from the Plugin Hub.<br><br>" +
-                "If you don't want the customized xp drops, but still want this plugin's functionality, " +
-                "you can uncheck <span style='color: #FF0000;'>\"Use Customizable XP drops\"</span> from that plugin" +
-                "</div></html>");
+                              "The <span style='color: #00FF00;'>Customizable XP Drops</span> plugin is required for populating data.<br><br>" +
+                              "If you're not seeing any data here after hitting monsters, " +
+                              "please go install it from the Plugin Hub.<br><br>" +
+                              "If you don't want the customized xp drops, but still want this plugin's functionality, " +
+                              "you can uncheck <span style='color: #FF0000;'>\"Use Customizable XP drops\"</span> from that plugin" +
+                              "</div></html>");
             emptyText.setForeground(Color.WHITE);
             emptyText.setBackground(ColorScheme.DARK_GRAY_COLOR);
             emptyText.setEditable(false);
@@ -190,24 +190,37 @@ public class DamageHistoryPanel extends PluginPanel {
 
     private void addTestRecord() {
         String[] players = partyService.isInParty() ?
-            partyService.getMembers().stream().map(PartyMember::getDisplayName).toArray(String[]::new) :
-            new String[]{client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : "You", "Player1", "Player2", "Player3"};
-        String[] npcs = {"Goblin", "Cow", "Rat", "Spider", "Something that is very long"};
-        int[] weaponIds = {27275, 25739, 21003, 25731, 26219, 13652, 27690, 4151, 12926};
+                partyService.getMembers().stream().map(PartyMember::getDisplayName).toArray(String[]::new) :
+                new String[] {
+                        client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : "You",
+                        "Player1",
+                        "Player2",
+                        "Player3"
+                };
+        String[] npcs = { "Goblin", "Cow", "Rat", "Spider", "Something that is very long" };
+        int[] weaponIds = { 27275, 25739, 21003, 25731, 26219, 13652, 27690, 4151, 12926 };
 
         // Cycle through players in order
         String player = players[testRecordCounter % players.length];
         testRecordCounter++;
 
-        int hit = (int)(Math.random() * 50);
-        String npc = npcs[(int)(Math.random() * npcs.length)];
-        int weaponId = weaponIds[(int)(Math.random() * weaponIds.length)];
-        int tickCount = prevTickCount + (int)(Math.random() * 100);
+        int hit = (int) (Math.random() * 50);
+        String npc = npcs[(int) (Math.random() * npcs.length)];
+        int weaponId = weaponIds[(int) (Math.random() * weaponIds.length)];
+        int tickCount = prevTickCount + (int) (Math.random() * 100);
         prevTickCount = tickCount;
         int attackSpeed = 4;
         boolean specialAttack = Math.random() < 0.3;
 
-        PlayerHitRecord record = new PlayerHitRecord(player, hit, npc, weaponId, tickCount, attackSpeed, specialAttack, null, null);
+        PlayerHitRecord record = new PlayerHitRecord(player,
+                hit,
+                npc,
+                weaponId,
+                tickCount,
+                attackSpeed,
+                specialAttack,
+                null,
+                null);
         addHit(record);
     }
 }

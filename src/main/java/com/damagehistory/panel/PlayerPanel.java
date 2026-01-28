@@ -18,6 +18,7 @@ import net.runelite.client.util.AsyncBufferedImage;
 import net.runelite.client.util.ImageUtil;
 
 public class PlayerPanel extends JPanel {
+
     private static final BufferedImage FIST_IMAGE = ImageUtil.loadImageResource(PlayerPanel.class, "fist.png");
 
     @Inject
@@ -34,7 +35,11 @@ public class PlayerPanel extends JPanel {
     private final Client client;
     private final DamageHistoryPanel parentPanel;
 
-    public PlayerPanel(String playerName, ItemManager itemManager, DamageHistoryConfig config, Client client, DamageHistoryPanel parentPanel) {
+    public PlayerPanel(String playerName,
+                       ItemManager itemManager,
+                       DamageHistoryConfig config,
+                       Client client,
+                       DamageHistoryPanel parentPanel) {
         this.playerName = playerName;
         this.itemManager = itemManager;
         this.config = config;
@@ -138,10 +143,12 @@ public class PlayerPanel extends JPanel {
                 public void mouseClicked(java.awt.event.MouseEvent e) {
                     clearAllHits();
                 }
+
                 @Override
                 public void mouseEntered(java.awt.event.MouseEvent e) {
                     clearLabel.setForeground(Color.WHITE);
                 }
+
                 @Override
                 public void mouseExited(java.awt.event.MouseEvent e) {
                     clearLabel.setForeground(ColorScheme.LIGHT_GRAY_COLOR);
@@ -176,9 +183,9 @@ public class PlayerPanel extends JPanel {
         }
 
         LayoutCalculator.ColumnWidths widths = LayoutCalculator.calculateColumnWidths(
-            hitRecords.stream().map(r -> new HitRecord(r.getHit(), r.getNpcName(), r.getWeaponId(),
-                r.getTickCount(), r.getAttackSpeed(), r.isSpecialAttack())).collect(Collectors.toList()),
-            this
+                hitRecords.stream().map(r -> new HitRecord(r.getHit(), r.getNpcName(), r.getWeaponId(),
+                        r.getTickCount(), r.getAttackSpeed(), r.isSpecialAttack())).collect(Collectors.toList()),
+                this
         );
 
         // Show only the configured number of recent hits
@@ -236,32 +243,32 @@ public class PlayerPanel extends JPanel {
 
         Dimension damageSize = new Dimension(widths.damageWidth, 0);
         JLabel damageLabel = UIUtils.createStyledLabel(
-            String.valueOf(record.getHit()),
-            SwingConstants.CENTER,
-            FontManager.getRunescapeBoldFont(),
-            UIUtils.getDamageColor(record.getHit(), config),
-            damageSize
+                String.valueOf(record.getHit()),
+                SwingConstants.CENTER,
+                FontManager.getRunescapeBoldFont(),
+                UIUtils.getDamageColor(record.getHit(), config),
+                damageSize
         );
         UIUtils.addDebugBorder(damageLabel, Color.BLUE, config.debugMode());
 
         Dimension npcSize = new Dimension(widths.npcWidth, 0);
         JLabel npcLabel = UIUtils.createStyledLabel(
-            "<html>" + record.getNpcName() + "</html>",
-            SwingConstants.LEFT,
-            null,
-            UIUtils.applyAlpha(Color.WHITE, alpha),
-            npcSize
+                "<html>" + record.getNpcName() + "</html>",
+                SwingConstants.LEFT,
+                null,
+                UIUtils.applyAlpha(Color.WHITE, alpha),
+                npcSize
         );
         UIUtils.addDebugBorderWithPadding(npcLabel, Color.GREEN, config.debugMode(), 8);
 
         TickInfo tickInfo = calculateTickInfo(record, index);
         Dimension tickSize = new Dimension(widths.tickWidth, 0);
         JLabel tickLabel = UIUtils.createStyledLabel(
-            tickInfo.text,
-            SwingConstants.CENTER,
-            null,
-            UIUtils.applyAlpha(tickInfo.color, alpha),
-            tickSize
+                tickInfo.text,
+                SwingConstants.CENTER,
+                null,
+                UIUtils.applyAlpha(tickInfo.color, alpha),
+                tickSize
         );
         UIUtils.addDebugBorder(tickLabel, Color.YELLOW, config.debugMode());
 
@@ -296,8 +303,8 @@ public class PlayerPanel extends JPanel {
         }
 
         String tickText = config.tickDisplayMode() == DamageHistoryConfig.TickDisplayMode.EXTRA_DELAYED_TICKS
-            ? String.format(" +%dt", ticksSince - previousAttackSpeed)
-            : String.format(" +%dt", ticksSince);
+                ? String.format(" +%dt", ticksSince - previousAttackSpeed)
+                : String.format(" +%dt", ticksSince);
 
         Color tickColor = UIUtils.getTickDelayColor(ticksSince, previousAttackSpeed, config);
         return new TickInfo(tickText, tickColor);

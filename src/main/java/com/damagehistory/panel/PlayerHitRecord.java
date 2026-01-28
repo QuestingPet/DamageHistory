@@ -4,6 +4,7 @@ import lombok.Value;
 
 @Value
 public class PlayerHitRecord {
+
     String playerName;
     int hit;
     String npcName;
