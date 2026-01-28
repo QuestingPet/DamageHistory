@@ -5,6 +5,7 @@ import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
 import net.runelite.client.config.ConfigSection;
+import net.runelite.client.config.Range;
 
 @ConfigGroup("DamageHistory")
 public interface DamageHistoryConfig extends Config {
@@ -30,6 +31,7 @@ public interface DamageHistoryConfig extends Config {
             description = "Maximum number of recent hits to display for yourself",
             position = 1
     )
+    @Range(min = 1, max = 100)
     default int maxHitsToShowSelf() {
         return 10;
     }
@@ -40,6 +42,7 @@ public interface DamageHistoryConfig extends Config {
             description = "Maximum number of recent hits to display for other players",
             position = 2
     )
+    @Range(min = 1, max = 100)
     default int maxHitsToShowOthers() {
         return 5;
     }

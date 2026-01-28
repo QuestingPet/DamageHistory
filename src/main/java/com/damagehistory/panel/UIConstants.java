@@ -6,7 +6,7 @@ public final class UIConstants {
 
     // Panel dimensions
     public static final int PANEL_HEIGHT = 54;
-    public static final int MAX_HIT_RECORDS = 50;
+    public static final int MAX_HIT_RECORDS = 100;
 
     // Padding values
     public static final int COLUMN_PADDING = 4;
