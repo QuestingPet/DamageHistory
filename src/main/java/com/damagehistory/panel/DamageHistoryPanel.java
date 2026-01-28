@@ -210,21 +210,4 @@ public class DamageHistoryPanel extends PluginPanel {
         PlayerHitRecord record = new PlayerHitRecord(player, hit, npc, weaponId, tickCount, attackSpeed, specialAttack, null, null);
         addHit(record);
     }
-
-    public void addTestPlayers() {
-        // Add some hardcoded test data for different players
-        addHit(new PlayerHitRecord("You", 25, "Goblin", 4151, 100, 4, false, null, null));
-        addHit(new PlayerHitRecord("You", 18, "Cow", 4151, 104, 4, false, 4, 4));
-
-        addHit(new PlayerHitRecord("Player1", 32, "Dragon", 4587, 200, 5, true, null, null));
-        addHit(new PlayerHitRecord("Player1", 15, "Goblin", 4587, 205, 5, false, 5, 5));
-        addHit(new PlayerHitRecord("Player1", 28, "Spider", 4587, 210, 5, false, 5, 5));
-
-//        addHit(new PlayerHitRecord("Player2", 45, "Demon", 4153, 300, 4, true, null, null));
-//        addHit(new PlayerHitRecord("Player2", 22, "Rat", 4153, 304, 4, false, 4, 4));
-
-        addHit(new PlayerHitRecord("Player3", 12, "Chicken", -1, 400, 4, false, null, null));
-    }
-
-
 }

@@ -192,6 +192,7 @@ public class DamageHistoryPlugin extends Plugin {
     @Subscribe
     public void onConfigChanged(ConfigChanged configChanged) {
         if (CONFIG_GROUP.equals(configChanged.getGroup()) && panel != null) {
+            log.debug("Config changed: {} = {}", configChanged.getKey(), configChanged.getNewValue());
             SwingUtilities.invokeLater(() -> panel.refreshPanel());
         }
     }

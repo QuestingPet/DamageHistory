@@ -5,6 +5,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.swing.*;
@@ -13,8 +14,8 @@ import net.runelite.api.Client;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.FontManager;
-import net.runelite.client.util.ImageUtil;
 import net.runelite.client.util.AsyncBufferedImage;
+import net.runelite.client.util.ImageUtil;
 
 public class PlayerPanel extends JPanel {
     private static final BufferedImage FIST_IMAGE = ImageUtil.loadImageResource(PlayerPanel.class, "fist.png");
@@ -167,6 +168,13 @@ public class PlayerPanel extends JPanel {
     public void refreshPanel() {
         hitsContainer.removeAll();
 
+        // Return early if no hits to display
+        if (hitRecords.isEmpty()) {
+            hitsContainer.revalidate();
+            hitsContainer.repaint();
+            return;
+        }
+
         LayoutCalculator.ColumnWidths widths = LayoutCalculator.calculateColumnWidths(
             hitRecords.stream().map(r -> new HitRecord(r.getHit(), r.getNpcName(), r.getWeaponId(),
                 r.getTickCount(), r.getAttackSpeed(), r.isSpecialAttack())).collect(Collectors.toList()),
@@ -174,7 +182,8 @@ public class PlayerPanel extends JPanel {
         );
 
         // Show only the configured number of recent hits
-        boolean isLocalPlayer = client.getLocalPlayer() != null && client.getLocalPlayer().getName().equals(playerName);
+        boolean isLocalPlayer = client.getLocalPlayer() != null &&
+                                Objects.equals(client.getLocalPlayer().getName(), playerName);
         int maxHits = isLocalPlayer ? config.maxHitsToShowSelf() : config.maxHitsToShowOthers();
         int hitsToShow = Math.min(hitRecords.size(), maxHits);
 
