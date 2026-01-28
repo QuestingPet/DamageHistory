@@ -11,7 +11,6 @@ import javax.swing.border.EmptyBorder;
 import lombok.Setter;
 import net.runelite.api.Client;
 import net.runelite.client.game.ItemManager;
-import net.runelite.client.party.PartyMember;
 import net.runelite.client.party.PartyService;
 import net.runelite.client.ui.ColorScheme;
 import net.runelite.client.ui.PluginPanel;
@@ -35,8 +34,6 @@ public class DamageHistoryPanel extends PluginPanel {
 
     private final JPanel basePanel = new JPanel();
     private final Map<String, PlayerPanel> playerPanels = new HashMap<>();
-    private int testRecordCounter = 0;
-    private int prevTickCount = 0;
 
     public DamageHistoryPanel() {
         super(false);
@@ -51,12 +48,6 @@ public class DamageHistoryPanel extends PluginPanel {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         buttonPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(e -> refreshPanel());
-        buttonPanel.add(refreshButton);
-        JButton testButton = new JButton("+");
-        testButton.addActionListener(e -> addTestRecord());
-        buttonPanel.add(testButton);
         JButton clearButton = new JButton("Clear History");
         clearButton.addActionListener(e -> clearHistory());
         buttonPanel.add(clearButton);
@@ -136,44 +127,42 @@ public class DamageHistoryPanel extends PluginPanel {
         basePanel.repaint();
     }
 
-    public void refreshPanel() {
-        if (!checkEmpty()) {
-            for (PlayerPanel playerPanel : playerPanels.values()) {
-                playerPanel.refreshPanel();
-            }
-        }
 
+
+    public void refreshPanel() {
+        for (PlayerPanel playerPanel : playerPanels.values()) {
+            playerPanel.refreshPanel();
+        }
         basePanel.revalidate();
         basePanel.repaint();
     }
 
-    private boolean checkEmpty() {
-        if (playerPanels.isEmpty()) {
-            basePanel.removeAll();
-            JPanel emptyPanel = new JPanel(new BorderLayout());
-            emptyPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
-
-            JTextPane emptyText = new JTextPane();
-            emptyText.setContentType("text/html");
-            emptyText.setText("<html><div style='text-align: center;'>" +
-                              "The <span style='color: #00FF00;'>Customizable XP Drops</span> plugin is required for populating data.<br><br>" +
-                              "If you're not seeing any data here after hitting monsters, " +
-                              "please go install it from the Plugin Hub.<br><br>" +
-                              "If you don't want the customized xp drops, but still want this plugin's functionality, " +
-                              "you can uncheck <span style='color: #FF0000;'>\"Use Customizable XP drops\"</span> from that plugin" +
-                              "</div></html>");
-            emptyText.setForeground(Color.WHITE);
-            emptyText.setBackground(ColorScheme.DARK_GRAY_COLOR);
-            emptyText.setEditable(false);
-            emptyText.setBorder(new EmptyBorder(5, 5, 5, 5));
-            emptyText.setPreferredSize(new Dimension(200, 300));
-
-            emptyPanel.add(emptyText, BorderLayout.CENTER);
-            basePanel.add(emptyPanel);
-            return true;
+    private void checkEmpty() {
+        if (!playerPanels.isEmpty()) {
+            return;
         }
 
-        return false;
+        basePanel.removeAll();
+        JPanel emptyPanel = new JPanel(new BorderLayout());
+        emptyPanel.setBackground(ColorScheme.DARK_GRAY_COLOR);
+
+        JTextPane emptyText = new JTextPane();
+        emptyText.setContentType("text/html");
+        emptyText.setText("<html><div style='text-align: center;'>" +
+                          "The <span style='color: #00FF00;'>Customizable XP Drops</span> plugin is required for populating data.<br><br>" +
+                          "If you're not seeing any data here after hitting monsters, " +
+                          "please go install it from the Plugin Hub.<br><br>" +
+                          "If you don't want the customized xp drops, but still want this plugin's functionality, " +
+                          "you can uncheck <span style='color: #FF0000;'>\"Use Customizable XP drops\"</span> from that plugin" +
+                          "</div></html>");
+        emptyText.setForeground(Color.WHITE);
+        emptyText.setBackground(ColorScheme.DARK_GRAY_COLOR);
+        emptyText.setEditable(false);
+        emptyText.setBorder(new EmptyBorder(5, 5, 5, 5));
+        emptyText.setPreferredSize(new Dimension(200, 300));
+
+        emptyPanel.add(emptyText, BorderLayout.CENTER);
+        basePanel.add(emptyPanel);
     }
 
     private void clearHistory() {
@@ -182,45 +171,10 @@ public class DamageHistoryPanel extends PluginPanel {
         }
         playerPanels.clear();
         basePanel.removeAll();
-        testRecordCounter = 0;
         checkEmpty();
         basePanel.revalidate();
         basePanel.repaint();
     }
 
-    private void addTestRecord() {
-        String[] players = partyService.isInParty() ?
-                partyService.getMembers().stream().map(PartyMember::getDisplayName).toArray(String[]::new) :
-                new String[] {
-                        client.getLocalPlayer() != null ? client.getLocalPlayer().getName() : "You",
-                        "Player1",
-                        "Player2",
-                        "Player3"
-                };
-        String[] npcs = { "Goblin", "Cow", "Rat", "Spider", "Something that is very long" };
-        int[] weaponIds = { 27275, 25739, 21003, 25731, 26219, 13652, 27690, 4151, 12926 };
 
-        // Cycle through players in order
-        String player = players[testRecordCounter % players.length];
-        testRecordCounter++;
-
-        int hit = (int) (Math.random() * 50);
-        String npc = npcs[(int) (Math.random() * npcs.length)];
-        int weaponId = weaponIds[(int) (Math.random() * weaponIds.length)];
-        int tickCount = prevTickCount + (int) (Math.random() * 100);
-        prevTickCount = tickCount;
-        int attackSpeed = 4;
-        boolean specialAttack = Math.random() < 0.3;
-
-        PlayerHitRecord record = new PlayerHitRecord(player,
-                hit,
-                npc,
-                weaponId,
-                tickCount,
-                attackSpeed,
-                specialAttack,
-                null,
-                null);
-        addHit(record);
-    }
 }
