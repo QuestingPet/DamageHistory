@@ -51,7 +51,6 @@ public class DamageHistoryPanel extends PluginPanel {
         
         JLabel titleLabel = new JLabel("Damage History");
         titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(titleLabel.getFont().deriveFont(Font.BOLD));
         titleLabel.setBorder(new EmptyBorder(0, 8, 0, 0));
         buttonPanel.add(titleLabel, BorderLayout.WEST);
         
