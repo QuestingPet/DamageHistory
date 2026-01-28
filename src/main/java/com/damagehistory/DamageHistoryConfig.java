@@ -55,10 +55,20 @@ public interface DamageHistoryConfig extends Config {
     }
 
     @ConfigItem(
+            keyName = "expandPanelsByDefault",
+            name = "Expand Panels by Default",
+            description = "Whether player panels should be expanded by default when a new player is added",
+            position = 4
+    )
+    default boolean expandPanelsByDefault() {
+        return true;
+    }
+
+    @ConfigItem(
             keyName = "sendDamageHistoryOverParty",
             name = "Send Damage History over party",
             description = "Send damage history information over party",
-            position = 4
+            position = 5
     )
     default boolean sendDamageHistoryOverParty() {
         return true;

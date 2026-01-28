@@ -31,7 +31,7 @@ public class PlayerPanel extends JPanel {
     private final JPanel headerPanel;
     private final JPanel hitsContainer;
     private final List<PlayerHitRecord> hitRecords = new ArrayList<>();
-    private boolean collapsed = false;
+    private boolean collapsed;
     private final Client client;
     private final DamageHistoryPanel parentPanel;
 
@@ -45,6 +45,7 @@ public class PlayerPanel extends JPanel {
         this.config = config;
         this.client = client;
         this.parentPanel = parentPanel;
+        this.collapsed = !config.expandPanelsByDefault();
 
         setLayout(new BorderLayout());
         setBackground(ColorScheme.DARK_GRAY_COLOR);
