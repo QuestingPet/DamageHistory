@@ -11,6 +11,7 @@ import com.google.gson.Gson;
 import com.google.inject.Provides;
 import java.awt.image.BufferedImage;
 import java.util.Map;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.swing.*;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ import net.runelite.api.MenuAction;
 import net.runelite.api.events.MenuOptionClicked;
 import net.runelite.api.events.VarbitChanged;
 import net.runelite.api.gameval.ItemID;
+import net.runelite.api.gameval.NpcID;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.eventbus.EventBus;
@@ -46,6 +48,15 @@ public class DamageHistoryPlugin extends Plugin {
     private static final String PREDICTED_HIT_MESSAGE = "predicted-hit";
     private static final String CONFIG_GROUP = "DamageHistory";
     private static final int DEFAULT_ATTACK_SPEED = 4;
+
+    private static Set<Integer> NPC_BLOCKLIST = Set.of(
+            NpcID.CRYSTAL_HUNLLEF_MELEE,
+            NpcID.CRYSTAL_HUNLLEF_RANGED,
+            NpcID.CRYSTAL_HUNLLEF_MAGIC,
+            NpcID.CRYSTAL_HUNLLEF_MELEE_HM,
+            NpcID.CRYSTAL_HUNLLEF_RANGED_HM,
+            NpcID.CRYSTAL_HUNLLEF_MAGIC_HM
+    );
 
     @Inject
     private Client client;
@@ -134,6 +145,11 @@ public class DamageHistoryPlugin extends Plugin {
     private void processPredictedHit(PredictedHit predictedHit, String playerName, int serverTick) {
         // Skip PvP hits and invalid NPCs
         if (predictedHit.isOpponentIsPlayer() || predictedHit.getNpcId() == -1) {
+            return;
+        }
+
+        // Ignore blocked NPCs
+        if (NPC_BLOCKLIST.contains(predictedHit.getNpcId())) {
             return;
         }
 
