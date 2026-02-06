@@ -15,6 +15,7 @@ This plugin requires the **Customizable XP Drops** plugin from the Plugin Hub to
 ## Changelog
 ### v1.2
 - Ignore damage history on NPCs like Hunnlef
+- Ignore damage history on any new NPCs coming in the future
 
 ### v1.1
 - Fixed mage spell tick speed for manual and auto casting

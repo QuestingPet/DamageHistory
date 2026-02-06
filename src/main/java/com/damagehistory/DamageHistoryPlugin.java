@@ -49,7 +49,7 @@ public class DamageHistoryPlugin extends Plugin {
     private static final String CONFIG_GROUP = "DamageHistory";
     private static final int DEFAULT_ATTACK_SPEED = 4;
 
-    private static Set<Integer> NPC_BLOCKLIST = Set.of(
+    private static final Set<Integer> NPC_BLOCKLIST = Set.of(
             NpcID.CRYSTAL_HUNLLEF_MELEE,
             NpcID.CRYSTAL_HUNLLEF_RANGED,
             NpcID.CRYSTAL_HUNLLEF_MAGIC,
@@ -57,6 +57,9 @@ public class DamageHistoryPlugin extends Plugin {
             NpcID.CRYSTAL_HUNLLEF_RANGED_HM,
             NpcID.CRYSTAL_HUNLLEF_MAGIC_HM
     );
+
+    // Currently this points to DEADMAN_THRALL_GHOSTLY_GREATER_WISP
+    private static final int HIGHEST_ALLOWED_NPC_ID = 15571;
 
     @Inject
     private Client client;
@@ -150,6 +153,11 @@ public class DamageHistoryPlugin extends Plugin {
 
         // Ignore blocked NPCs
         if (NPC_BLOCKLIST.contains(predictedHit.getNpcId())) {
+            return;
+        }
+
+        // Ignore new NPCs to avoid abuse for new content
+        if (predictedHit.getNpcId() > HIGHEST_ALLOWED_NPC_ID) {
             return;
         }
 
