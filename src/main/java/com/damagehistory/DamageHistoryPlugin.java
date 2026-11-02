@@ -118,6 +118,7 @@ public class DamageHistoryPlugin extends Plugin {
 
     @Override
     protected void shutDown() throws Exception {
+        wsClient.unregisterMessage(DamageHistoryPartyMessage.class);
         clientToolbar.removeNavigation(navButton);
         panel = null;
         log.debug("Damage History stopped!");
