@@ -58,8 +58,8 @@ public class DamageHistoryPlugin extends Plugin {
             NpcID.CRYSTAL_HUNLLEF_MAGIC_HM
     );
 
-    // Currently this points to DEADMAN_THRALL_GHOSTLY_GREATER_WISP
-    private static final int HIGHEST_ALLOWED_NPC_ID = 15571;
+    // Currently this points to HW26_TRICKORTREATER_ADULT_5_VOMIT
+    private static final int HIGHEST_ALLOWED_NPC_ID = 16803;
 
     @Inject
     private Client client;
